@@ -5,7 +5,8 @@ To make requests, use this format:
 
 `https://{url-of-backend}/return`
 
-with a JSON post with {Message}.
+with a JSON post with 
+{ChatID (String), Message (String)}.
 
 This API will return it will a JSON of
 
