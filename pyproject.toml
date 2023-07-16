@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "starlightx-cne"
+version = "0.1.0"
+description = "Backend writer for the Character Neural Engine Demo"
+authors = ["Mike Zeng <mzen@starlightx.io>", "Steve Zeng <cmink2040@gmail.com"]
+license = "SXPL"
+readme = "README.md"
+packages = [{include = "sxcne", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+fastapi = "^0.100.0"
+uvicorn = {extras = ["standard"], version = "^0.23.0"}
+websockets = "^11.0.3"
+httpx = "^0.24.1"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
