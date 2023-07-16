@@ -1,10 +1,11 @@
+image: python:latest
+
 stages:
   - test
 
-test-code-job1:
+test:
   stage: test
   script:
-    - apt-get install -y python3-pip
     - pip install poetry
     - poetry install
     - poetry run pytest
