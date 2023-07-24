@@ -32,7 +32,7 @@ format_string = ""
 
 
 # Testing Code. DO NOT USE IN PRODUCTION!!!
-@app.get("/test")
+@app.get("/test/")
 async def testing():
     # Some weird code to get the path to the JSON file because I couldn't figure out how to do it otherwise
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -48,23 +48,24 @@ async def testing():
     personality = (characterdata["characters"][0]["personality"])
     backstory = (characterdata["characters"][0]["backstory"])
 
-    # GPT4ALL Snoozy 13B
-    model = GPT4All("GPT4All-13B-snoozy.ggmlv3.q4_0.bin")
+    # GPT4ALL Guanaco Model. Note: Needs to be swapped in prod as this is a noncommercial model.
+    model = GPT4All("guanaco-33B.ggmlv3.q4_0.bin", model_path="models/", n_threads=12)
 
     # Paramaters
-    message = "Hey, you want an apple?"
-    extras = "Include only the response, not anything else such as 'example', 'she might say', etc."
-    familiarity = "stranger"
+    message = "How are you doing today?"
+    extras = "only the response, not anything else such as 'example', 'she might say', your comments, etc"
+    familiarity = "a stranger"
 
     # Get Response
-    format_string = f"Write a single response in her personaltiy to a {familiarity} asking her {message}. If there is not enough information, extrapolate something up. {extras}"
-    prompt = f"{name} is {personality}. {format_string}"
-    output = model.generate(prompt, max_tokens=50, temp=1.5)
+    format_string = f"Write {name}'s detailed reply with the format of {extras} in her personaltiy of {personality}, to {familiarity} asking her the following: {message}."
+    prompt = f"{format_string}"
+    output = model.generate(prompt, max_tokens=150, temp=2)
 
     # Get Emotions
-    format_string = f"Write the emotion that {name} would feel to a {familiarity} asking her {message}. Append a emotion even if it not enough details. Guess."
-    prompt = f"{name} is {personality}. {format_string}"
+    format_string = f"Find the emotion {name} would feel if a {familiarity} asked her {message}. Append a emotion even if it not enough details."
+    extras = "Use only a single word for your answer, not anything else such as 'If I were her', 'her emotions probably are'"
+    prompt = f"{name} is {personality}. {format_string}, {extras}."
 
-    emotions = model.generate(prompt, max_tokens=50, temp=0.5)
+    emotions = model.generate(prompt, max_tokens=10, temp=0.1)
 
-    return {"output": output, "emotions": emotions}
+    return {"output": output}

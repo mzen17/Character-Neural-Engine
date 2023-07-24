@@ -52,3 +52,12 @@ there is a ~26s inference time on a AMD Ryzen 5800H. We'll look into
 GPU support when GPT4All supports GPU, although not many end users
 will benefit from it as they'll probably need to virtualize the GPUs
 to run in production.
+
+## Performance Scaling Table
+| CPU | Model | Time | Utilization
+| -------- | ------- | ------- |
+| AMD Ryzen 5800H | Guanaco 33B | 98 seconds | 25%
+| AMD Ryzen 5800H | Guanaco 33B | 59 seconds | 50%
+
+
+

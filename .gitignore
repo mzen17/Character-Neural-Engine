@@ -6,3 +6,7 @@
 # IDE files
 .idea
 .vscode
+
+# Development Files
+.env
+**/models/*
