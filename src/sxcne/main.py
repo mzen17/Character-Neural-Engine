@@ -53,19 +53,20 @@ async def testing():
 
     # Paramaters
     message = "How are you doing today?"
-    extras = "only the response, not anything else such as 'example', 'she might say', your comments, etc"
-    familiarity = "a stranger"
+    familiarity = "a friend"
 
     # Get Response
-    format_string = f"Write {name}'s detailed reply with the format of {extras} in her personaltiy of {personality}, to {familiarity} asking her the following: {message}."
+    extras = "only the reply, not anything else such as 'example', 'she might say', your comments, etc"
+    format_string = f"Write {name}'s reply with her personaltiy of {personality}, to {familiarity} asking her the following: {message}."
     prompt = f"{format_string}"
-    output = model.generate(prompt, max_tokens=150, temp=2)
+
+    response = model.generate(prompt, max_tokens=50, temp=1)
 
     # Get Emotions
-    format_string = f"Find the emotion {name} would feel if a {familiarity} asked her {message}. Append a emotion even if it not enough details."
+    format_string = f"Predict {name}'s emotion, her personality of {personality} if a {familiarity} asked her the following: {message}."
     extras = "Use only a single word for your answer, not anything else such as 'If I were her', 'her emotions probably are'"
-    prompt = f"{name} is {personality}. {format_string}, {extras}."
+    prompt = f"{format_string}, {extras}."
 
     emotions = model.generate(prompt, max_tokens=10, temp=0.1)
 
-    return {"output": output}
+    return {"response": response, "emotions" : emotions}

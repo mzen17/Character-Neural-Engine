@@ -9,4 +9,6 @@
 
 # Development Files
 .env
-**/models/*
+models
+modelstemp
+llamaworkspace
