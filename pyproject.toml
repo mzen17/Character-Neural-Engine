@@ -2,7 +2,7 @@
 name = "starlightx-cne"
 version = "0.1.0"
 description = "Backend writer for the Character Neural Engine Demo"
-authors = ["Mike Zeng <mzen@starlightx.io>", "Steve Zeng <cmink2040@gmail.com"]
+authors = ["Mike Zeng <mzen@starlightx.io>", "Steve Zeng <cmink2040@gmail.com>"]
 license = "SXPL"
 readme = "README.md"
 packages = [{include = "sxcne", from = "src"}]
@@ -13,7 +13,7 @@ fastapi = "^0.100.0"
 uvicorn = {extras = ["standard"], version = "^0.23.0"}
 websockets = "^11.0.3"
 httpx = "^0.24.1"
-gpt4all = "^1.0.6"
+gpt4all = "1.0.6"
 openai = "^0.27.8"
 python-dotenv = "^1.0.0"
 

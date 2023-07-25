@@ -58,6 +58,7 @@ to run in production.
 | -------- | ------- | ------- |
 | AMD Ryzen 5800H | Guanaco 33B | 98 seconds | 25%
 | AMD Ryzen 5800H | Guanaco 33B | 59 seconds | 50%
+| 1/4 Xeon E5 2670 | Llama 13B | 579 seconds | 50%
 
 
 
