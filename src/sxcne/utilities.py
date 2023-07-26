@@ -46,6 +46,7 @@ def emotions_filter(sentence: str):
     "Hurt", "Empowered", "Dismissive", "Resigned", "Dismissive", "Apathetic",
     "Horrified", "Disappointed", "Fascinated", "Fulfilled", "Fulfilled",
     "Reflective", "Despressed", "Mad", "Annoyed", "Confused", "Disappointed",
+    "Excitement", "Happiness"
     ]
 
     # Convert the sentence to lowercase for case-insensitive matching

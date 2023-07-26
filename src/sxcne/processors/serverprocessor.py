@@ -14,8 +14,7 @@ def post_message2server(message:str, familiarity:str, name:str, personality:str)
 
     response = requests.post(url, json = data).json()
     print (response["content"])
-    response_data = sxcne.utilities.filter_out_text_between_asterisks(response["content"])
-    response_data = sxcne.utilities.slash_sentences(response_data)
+    response_data = sxcne.utilities.slash_sentences(sxcne.utilities.filter_out_text_between_asterisks(response["content"]))
 
     # Emotions
     prompt = sxcne.processors.promptprocessor.emotionprocessor(message, familiarity, name, personality)
@@ -23,7 +22,8 @@ def post_message2server(message:str, familiarity:str, name:str, personality:str)
 
     print(prompt) # Logging purposes
 
-    emotion = requests.post(url, json = data)
-    emotion_data = emotion.json()
+    emotion = requests.post(url, json = data).json()
+    print (emotion["content"])
+    emotion_data = sxcne.utilities.emotions_filter(emotion["content"])
 
-    return {"reply": response_data, "emotion": emotion_data["content"]}
+    return {"reply": response_data, "emotion": emotion_data}
