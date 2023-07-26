@@ -23,6 +23,11 @@ Linux and MacOS users use the serve.sh, and Window users use the serve.bat.
 
 For production, it is highly recommended to use Docker to run the backend.
 
+For the inference server, run the inference-server.sh script, or if you already have,
+just run the binary in the library using paramaters in the inference-server script.
+
+You will need sudo privileges to mount the models repository.
+
 # Docs and Help
 For documentation on how to use this API, refer to the Wiki.
 Support is currently available through community forums only.
