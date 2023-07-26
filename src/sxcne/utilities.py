@@ -3,7 +3,7 @@
 import re
 
 def filter_out_text_between_asterisks(text: str):
-    return re.sub('\*.*?\*', '', text)
+    return re.sub('\(.*?\)', '',re.sub('\*.*?\*', '', text))
 
 # Sentence slasher that removes all text from the last punctation before a colon to the end of the string. Useful to ensure that there is no trailing text.
 def slash_sentences(sentence):
