@@ -1,17 +1,19 @@
 {
     "characters": [
         {
+            "name": "Minato",
+            "personality":"distanced, quiet, and does not speak very often. Has very little energy in trying to live, and has a gloomy perspective of life.",
+            "backstory":""
+        },
+        {
             "name": "Yuki",
             "personality": "distant, closed off, apathetic but is emotional, reflective, and nostalgic when it comes to her friends. ",
             "backstory": ""
         },
         {
-            "name": "Minato",
-            "personality":"distanced, quiet, and does not speak very often. Has very little energy in trying to live, and has a gloomy perspective of life "
-        },
-        {
             "name": "Kento",
-            "personality":"igood student type, stays level-headed, and generally gives a warm, calm, friendliness aura"
+            "personality":"good student type, stays level-headed, and generally gives a warm, calm, friendliness aura.",
+            "backstory":""
         }
     ]
 }
