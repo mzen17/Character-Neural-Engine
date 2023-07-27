@@ -43,9 +43,7 @@ Then, you will recieve a JSON response with the following:
 
 `emotion | [string1, string2, string3...]`
 
-Now, you have a working interaction between the Character Neural Engine and
-
-your frontend!
+Now, you have a working interaction between the Character Neural Engine and your frontend!
 
 ## Support
 
