@@ -64,8 +64,3 @@ def emotions_filter(sentence: str):
 
     return result
 
-
-
-
-
-

@@ -10,7 +10,7 @@ import json
 import os
 
 from sxcne.models.inputs import MessageRequest
-import sxcne.processors.serverprocessor
+import sxcne.processors.serverprocessor as server
 import sxcne.processors.databaseprocessor as db
 
 
@@ -30,22 +30,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+server.set_server_url(os.environ["LLAMA_SERVER"])
+print(server.url)
+
 @app.post("/ask/")
-async def response(character: str, input: MessageRequest):
+async def response(input: MessageRequest):
+    server.set_server_url(os.environ["LLAMA_SERVER"])
 
     # Ensure request validation
     print("SESSION: ", input.session)
-    if (input.session is None):
+    if (os.environ['NODE_ENV'] == "dev"):
+        print("Warning! This is a development session!")
+    elif (input.session is None):
         return {"error":"Your app must first grab a key from the /genkey/ endpoint. This is to validate sessions so user chats cannot step on top of each other."}
     elif (not db.authenticateSession(input.id, input.session)):
         return {"error":"Your app session is out of date. Try to reload your browser."}
 
     # Some mapping checks. May be simplified in the future
-    if(character.lower() == "minato"):
+    if(input.character.lower() == "minato"):
         spi = 0
-    elif(character.lower() == "yuki"):
+    elif(input.character.lower() == "yuki"):
         spi=1
-    elif(character.lower() == "kento"):
+    elif(input.character.lower() == "kento"):
         spi=2
     else:
         return {"error":"invalid character"}
@@ -76,7 +82,7 @@ async def response(character: str, input: MessageRequest):
         context = [[],'']
 
     # Get Response
-    data = sxcne.processors.serverprocessor.post_message2server(message, familiarity, name, personality, context[0])
+    data = server.post_message2server(message, familiarity, name, personality, context[0])
     db.push_conversation_to_chatID(input.id,input.message,data["reply"])
 
     return {"response": data["reply"], "emotions" : data["emotion"]}

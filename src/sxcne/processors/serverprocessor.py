@@ -7,9 +7,21 @@ import requests
 import sxcne.processors.promptprocessor
 import sxcne.utilities
 
-def post_message2server(message:str, familiarity:str, name:str, personality:str, context:str):
-    url = 'http://10.42.0.227:8080/completion'
+url = ""
 
+def set_server_url(url_input: str):
+    global url
+    url = "http://" + url_input
+    print("URL: ", url)
+    
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raises an error for unsuccessful responses (4xx or 5xx)
+        print("Backend URL connection successful. Status code:", response.status_code)
+    except requests.exceptions.RequestException as e:
+        print("Warning, Llama server connection failed:", e)
+
+def post_message2server(message:str, familiarity:str, name:str, personality:str, context:str):
     context_merge = ""
 
     for chat in context:
@@ -22,7 +34,7 @@ def post_message2server(message:str, familiarity:str, name:str, personality:str,
 
     print(prompt) # Logging purposes
 
-    response = requests.post(url, json = data).json()
+    response = requests.post(url+"/completion", json = data).json()
     print (response["content"])
     response_data = sxcne.utilities.slash_sentences(sxcne.utilities.filter_out_text_between_asterisks(response["content"]))
 
@@ -32,8 +44,11 @@ def post_message2server(message:str, familiarity:str, name:str, personality:str,
 
     print(prompt) # Logging purposes
 
-    emotion = requests.post(url, json = data).json()
+    emotion = requests.post(url+"/completion", json = data).json()
     print (emotion["content"])
     emotion_data = sxcne.utilities.emotions_filter(emotion["content"])
 
     return {"reply": response_data, "emotion": emotion_data}
+
+def create_context_from_backstory(backstory: str):
+    pass

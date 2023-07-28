@@ -99,9 +99,3 @@ def purgeRowKey(chatID: int):
     connection = sqlite3.connect("./test.db")
     sql_command = "DELETE FROM messages WHERE chatid = ?"
     connection.execute(sql_command, (chatID,))
-
-
-
-
-    
-    
