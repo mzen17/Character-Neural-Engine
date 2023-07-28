@@ -6,6 +6,7 @@ stages:
 test:
   stage: python-test
   script:
+    - ./scripts/mount.sh
     - pip install poetry
     - poetry install
     - poetry run pytest
