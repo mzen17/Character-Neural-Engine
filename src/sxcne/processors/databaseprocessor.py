@@ -37,15 +37,19 @@ def initialize():
     connection = sqlite3.connect("./test.db")
 
     # SQLite does not support arrays so initialize user inputs and character outputs as text as JSON.
-    sql_command = "CREATE TABLE messages(chatid INTEGER PRIMARY KEY, conversation TEXT, additionBackstory TEXT, cacheToken TEXT)"
+    sql_command = "CREATE TABLE IF NOT EXISTS messages(chatid INTEGER PRIMARY KEY, conversation TEXT, additionBackstory TEXT, cacheToken TEXT)"
     connection.execute(sql_command)
 
 
 # Clean up the DB to reset it, as this is just a session store.
 def cleanup():
     connection = sqlite3.connect("./test.db")
-    sql_command = "DROP TABLE messages"
+
+    sql_command = "DROP TABLE IF EXISTS messages"
     connection.execute(sql_command)
+    
+    connection.commit()
+
 
 
 # Send conversation to the context of the chatID
