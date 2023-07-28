@@ -3,8 +3,8 @@ image: python:latest
 stages:
   - test
 
-test:
-  stage: python-test
+test1:
+  stage: test
   script:
     - ./scripts/mount.sh
     - pip install poetry
