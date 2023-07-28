@@ -13,7 +13,7 @@ def test__single_row():
     output = "Hi!"
     
     dbp.push_conversation_to_chatID(20, userinput, output)
-    assert dbp.get_conversation(20) == [ [{ 'input': 'Hello!', 'output': 'Hi!'}], key]
+    assert dbp.get_conversation(20) == [ [{ 'input': 'Hello!', 'output': 'Hi!'}], "{}", key]
 
 
 def test_db_multirow():
@@ -22,10 +22,10 @@ def test_db_multirow():
     outputs = ["Why, Hi! How are you doing?", "That's great to hear!"]
 
     dbp.push_conversation_to_chatID(50, userinputs[0], outputs[0])
-    assert dbp.get_conversation(50) == [ [{'input': 'Hello!', 'output': 'Why, Hi! How are you doing?'}],  key]
+    assert dbp.get_conversation(50) == [ [{'input': 'Hello!', 'output': 'Why, Hi! How are you doing?'}],"{}",  key]
 
     dbp.push_conversation_to_chatID(50, userinputs[1], outputs[1])
-    assert dbp.get_conversation(50) == [ [{'input': 'Hello!', 'output': 'Why, Hi! How are you doing?'}, {'input': 'I\'m doing great, thank you!', 'output': 'That\'s great to hear!'}], key]
+    assert dbp.get_conversation(50) == [ [{'input': 'Hello!', 'output': 'Why, Hi! How are you doing?'}, {'input': 'I\'m doing great, thank you!', 'output': 'That\'s great to hear!'}], "{}", key]
 
 # Test Cache Validation
 def test__db_auth():

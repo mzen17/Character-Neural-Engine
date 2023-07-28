@@ -3,7 +3,7 @@
 # You should have recieved a copy of the SXPLv1 with this code.
 # If not, read https://starlightx.io/licenses/sxpl.txt
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 import json
@@ -42,9 +42,9 @@ async def response(input: MessageRequest):
     if (os.environ['NODE_ENV'] == "dev"):
         print("Warning! This is a development session!")
     elif (input.session is None):
-        return {"error":"Your app must first grab a key from the /genkey/ endpoint. This is to validate sessions so user chats cannot step on top of each other."}
+        raise HTTPException(status_code=418, detail="Your app must first grab a key from the /genkey/ endpoint. This is to validate sessions so user chats cannot step on top of each other.")
     elif (not db.authenticateSession(input.id, input.session)):
-        return {"error":"Your app session is out of date. Try to reload your browser."}
+        raise HTTPException(status_code=401, detail="Your app session is out of date. Try to reload your browser")
 
     # Some mapping checks. May be simplified in the future
     if(input.character.lower() == "minato"):
@@ -70,7 +70,10 @@ async def response(input: MessageRequest):
     # Get Character Data
     name = (characterdata["characters"][spi]["name"])
     personality = (characterdata["characters"][spi]["personality"])
-    backstory = (characterdata["characters"][0]["backstory"]) # <-- NOT IMPLEMENTED YET
+    backstory = (characterdata["characters"][0]["backstory"])
+
+    for event in backstory:
+        pass
 
     # Paramaters
     message = input.message

@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 # Standard Testing Libs
+import os
 import json
 
 # Interal Imports
@@ -11,12 +12,16 @@ from sxcne.main import app
 client = TestClient(app)
 
 def test__status():
-    data = {"id": "324", "message": "hi", "model": "orca-3b.q4_0.bin"}
-    response = client.post("/ask/Minato/", data=json.dumps(data))
-    assert response.status_code == 200
+    os.environ["NODE_ENV"] = "prod"
+    os.environ["LLAMA_SERVER"] = "10.42.0.227:8080"
 
-def test__response():
-    data = {"id": "324", "message": "hi", "model": "orca-3b.q4_0.bin"}
-    response = client.post("/ask/Minato/", data=json.dumps(data))
+    response = client.get("/genkey/").json()
+
+    key = response["key"]
+    session = response["token"]
+    print("Data: ",key, session)
+    
+    data = {"id": key, "message": "hi", "character": "minato", "session": session}
+    response = client.post("/ask/", json=data)
     assert response.status_code == 200
     assert response.json() != {"message": "", "emotions": []}

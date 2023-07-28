@@ -8,6 +8,11 @@ import json
 import secrets
 import string
 
+from typing import Optional
+import os
+
+dev = False if "NODE_ENV" not in os.environ else (os.environ["NODE_ENV"] == "dev")
+
 connection = sqlite3.connect("./test.db")
 
 
@@ -32,7 +37,7 @@ def initialize():
     connection = sqlite3.connect("./test.db")
 
     # SQLite does not support arrays so initialize user inputs and character outputs as text as JSON.
-    sql_command = "CREATE TABLE messages(chatid INTEGER PRIMARY KEY, conversation TEXT, cacheToken TEXT)"
+    sql_command = "CREATE TABLE messages(chatid INTEGER PRIMARY KEY, conversation TEXT, additionBackstory TEXT, cacheToken TEXT)"
     connection.execute(sql_command)
 
 
@@ -44,17 +49,21 @@ def cleanup():
 
 
 # Send conversation to the context of the chatID
-def push_conversation_to_chatID(chatID: int, input: str, output: str):
+def push_conversation_to_chatID(chatID: int, input: str, output: str, newEvent: Optional[str] = None):
     connection = sqlite3.connect("./test.db")
     conversation_data = get_conversation(chatID)
 
     if conversation_data is not None:
-        conversation, cacheToken = conversation_data
+        conversation, additionBackstory, cacheToken = conversation_data
     else:
         conversation = []
         cacheToken = ""
+        additionBackstory = ""
 
     conversation.append({"input": input, "output": output})
+
+    if newEvent is not None:
+        additionBackstory.append({newEvent})
 
     sql_command = "INSERT OR REPLACE INTO messages (chatid, conversation, cacheToken) VALUES (?, ?, ?)"
     connection.execute(sql_command, (chatID, json.dumps(conversation), cacheToken))
@@ -63,14 +72,18 @@ def push_conversation_to_chatID(chatID: int, input: str, output: str):
 
 def get_conversation(chatID: int):
     connection = sqlite3.connect("./test.db")
-    sql_command = "SELECT conversation, cacheToken FROM messages WHERE chatid = ?"
+    sql_command = "SELECT conversation, additionBackstory, cacheToken FROM messages WHERE chatid = ?"
     cursor = connection.execute(sql_command, [chatID])
     row = cursor.fetchone()
 
     if row:
-        conversation, cacheToken = row
+        conversation, backstory, cacheToken = row
         input_data = json.loads(conversation)
-        return [input_data, cacheToken]
+        if backstory is not None:
+            bg = json.loads(backstory)
+        else:
+            bg = "{}"
+        return [input_data, bg, cacheToken]
     return None
 
 
@@ -79,19 +92,25 @@ def spawnKey(chatID: int):
     purgeRowKey(chatID)
     session = generate_random_string(10)
 
+    if dev:
+        print("Added Session: ", session)
+
     connection = sqlite3.connect("./test.db")
 
     empty_conversation = json.dumps([])
-    sql_command = "INSERT INTO messages (chatid, conversation, cacheToken) VALUES (?,?,?)"
-    connection.execute(sql_command, (chatID,empty_conversation,session))
+    sql_command = "INSERT INTO messages (chatid, conversation, additionBackstory, cacheToken) VALUES (?,?,?,?)"
+
+    connection.execute(sql_command, (chatID,empty_conversation,empty_conversation,session))
     connection.commit()
     return session
 
 
 def authenticateSession(chatID: int, token: str):
-    print("CHAT: ", chatID)
-    print("TOKEN: ",token)
-    return (get_conversation(chatID) is not None) and (get_conversation(chatID)[1] == token)
+    if dev:
+        print("CHAT: ", chatID)
+        print("TOKEN: ",token)
+        print("EXPECTED_TOKEN: ", get_conversation(chatID)[2])
+    return (get_conversation(chatID) is not None) and (get_conversation(chatID)[2] == token)
 
 
 # Clean row, called before using to keep row authentic
