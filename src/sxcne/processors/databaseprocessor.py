@@ -18,9 +18,13 @@ connection = sqlite3.connect("./test.db", check_same_thread=False)
 
 # Key -> Token generated to make sure others cannot step on each other's chats.
 def generate_random_string(length):
-    alphabet = string.ascii_letters + string.digits + string.punctuation
+    # Characters to choose from for the random string
+    alphabet = string.ascii_letters + string.digits
+
+    # Use secrets.choice() to securely choose characters from the alphabet
     random_string = ''.join(secrets.choice(alphabet) for _ in range(length))
     return random_string
+
 
 
 # Test connection for pytests

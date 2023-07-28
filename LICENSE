@@ -1,4 +1,4 @@
-All files in the diagrams directory are under the CC-BY-SA-4.0
+All files in the diagrams/ directory are under the CC-BY-SA-4.0
 The rest of the code is under the StarlightX Public License,
 shown below.
 
@@ -64,7 +64,8 @@ Copyright (C) 2023 StarlightX. <https://starlightx.io/>
   3. Termination
 
     This license may be revised in the future, but the licensor cannot revoke the 
-    license as long as you follow this version of the license's terms. 
+    license as long as you follow the particular version of the license that 
+    you recieved. 
 
     However, in the case that you do not follow the license terms, 
     your rights to this product will be terminated, and you are no

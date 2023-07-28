@@ -4,6 +4,7 @@
 # If not, read https://starlightx.io/licenses/sxpl.txt
 
 import requests
+from typing import List
 
 # Internal Libs
 import sxcne.processors.promptprocessor as promptprocessor
@@ -25,7 +26,8 @@ def set_server_url(url_input: str):
         print("Warning, Llama server connection failed:", e)
 
 
-def post_message2server(message:str, familiarity:str, name:str, personality:str, context:str):
+def post_message2server(message:str, familiarity:str, name:str, personality:str, context:str, backstory: str):
+    # Grab chat info and info
     context_merge = ""
 
     for chat in context:
@@ -33,44 +35,48 @@ def post_message2server(message:str, familiarity:str, name:str, personality:str,
         context_merge += f"{name}: {chat['output']}"
 
     # Get Response
-    prompt = promptprocessor.dialogueprocessor(message, familiarity, name, personality, context_merge)
-    print(prompt)
+    prompt = promptprocessor.dialogueprocessor(message, familiarity, name, personality, context_merge, backstory)
+    print("Prompt: ",prompt)
 
     data = {"prompt": prompt,"n_predict": 64, "temperature":0.5}
-
-    print(prompt) # Logging purposes
-
     response = requests.post(url+"/completion", json = data).json()
     response_data = utils.slash_sentences(utils.filter_out_text_between_asterisks(response["content"]))
 
     # Emotions
-    prompt = promptprocessor.emotionprocessor(message)
-    data = {"prompt": prompt,"n_predict": 16, "temperature":0.1}
-
-    print(prompt) # Logging purposes
-
-    emotion = requests.post(url+"/completion", json = data).json()
-    print (emotion["content"])
-    emotion_data = utils.emotions_filter(emotion["content"])
+    emotions = get_emotions(message)
 
     if (response_data == "" or response_data == " "):
         response_data = "..."
 
-    return {"reply": response_data, "emotion": emotion_data}
+    return {"reply": response_data, "emotion": emotions}
 
 
 def create_context_from_backstory(backstory: str, name: str):
     event_merge = ""
 
     for event in backstory:
-        event_merge = event_merge + event + ","
+        event_merge = event_merge + event + ", "
 
-    prompt = promptprocessor.gencontextprocessor(backstory, name)
+    prompt = promptprocessor.gencontextprocessor(event_merge, name)
     data = {"prompt": prompt,"n_predict": 128, "temperature":0.1}
     response = requests.post(url+"/completion", json = data).json()
+    response_data = utils.slash_sentences(response["content"])
 
-    return response["content"]
+    print(prompt)
+
+    return response_data
     
+def get_emotions(message: str):
+    prompt = promptprocessor.emotionprocessor(message)
+    data = {"prompt": prompt,"n_predict": 16, "temperature":0.1}
+
+    print("Emotions Prompt: ",prompt) # Logging purposes
+
+    emotion = requests.post(url+"/completion", json = data).json()
+    print (emotion["content"])
+    emotion_data = utils.emotions_filter(emotion["content"])
+
+    return emotion_data
 
     
 

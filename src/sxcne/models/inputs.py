@@ -6,3 +6,4 @@ class MessageRequest (BaseModel):
     id: int
     character: str
     session: Optional[str] = None
+    person_asking: Optional[str] = None

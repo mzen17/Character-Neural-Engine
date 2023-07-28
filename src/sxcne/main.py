@@ -1,7 +1,7 @@
 # Copyright (C) 2023, StarlightX.
 # This source is covered under the StarlightX Public License v1.
 # You should have recieved a copy of the SXPLv1 with this code.
-# If not, read https://starlightx.io/licenses/sxpl.txt
+# If not, read https://starlightx.io/licenses/SXPLv1.txt
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -60,14 +60,28 @@ async def response(input: MessageRequest):
         raise HTTPException(status_code=401, detail="Your app session is out of date. Try to reload your browser")
 
     # Some mapping checks. May be simplified in the future
-    if(input.character.lower() == "minato"):
+    chararacter = input.character.lower()
+    if(chararacter == "minato"):
         spi = 0
-    elif(input.character.lower() == "yuki"):
+    elif(chararacter == "yuki"):
         spi=1
-    elif(input.character.lower() == "kento"):
+    elif(chararacter == "kento"):
         spi=2
     else:
         return {"error":"invalid character"}
+    
+    if (input.person_asking is not None):
+        if(input.person_asking.lower() == "minato"):
+            familiarity = "a friend"
+        elif(input.person_asking.lower() == "yuki"):
+            familiarity = "a friend"
+        elif(input.person_asking.lower() == "kento"):
+            familiarity = "a friend"
+        else:
+            familiarity = "a stranger"
+    else:
+        familiarity = "a stranger"
+    
 
 
     # Some weird code to get the path to the JSON file because I couldn't figure out how to do it otherwise
@@ -83,14 +97,13 @@ async def response(input: MessageRequest):
     # Get Character Data
     name = (characterdata["characters"][spi]["name"])
     personality = (characterdata["characters"][spi]["personality"])
-    backstory = (characterdata["characters"][0]["backstory"])
+    backstory = (characterdata["characters"][spi]["backstory"])
 
-    for event in backstory:
-        pass
+    knowledge_base = server.create_context_from_backstory(backstory, name)
+    print(knowledge_base)
 
     # Paramaters
     message = input.message
-    familiarity = "a stranger"
 
     context = db.get_conversation(input.id)
 
@@ -98,7 +111,7 @@ async def response(input: MessageRequest):
         context = [[],'']
 
     # Get Response
-    data = server.post_message2server(message, familiarity, name, personality, context[0])
+    data = server.post_message2server(message, familiarity, name, personality, context[0], knowledge_base)
     db.push_conversation_to_chatID(input.id,input.message,data["reply"])
 
     return {"response": data["reply"], "emotions" : data["emotion"]}
@@ -113,5 +126,25 @@ def generatekey():
     token = db.spawnKey(genkey)
     
     return {"key":genkey, "token":token}
+
+@app.get("/test/")
+def gencontext():
+        # Some weird code to get the path to the JSON file because I couldn't figure out how to do it otherwise
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    json_file_path = os.path.join(script_dir, "characters.json")
+
+    # Load JSON Data
+    with open(json_file_path, "r") as file:
+        json_data = file.read()
+    
+    characterdata = json.loads(json_data)
+
+    # Get Character Data
+    name = (characterdata["characters"][0]["name"])
+    backstory = (characterdata["characters"][0]["backstory"])
+    print(backstory)
+    data = server.create_context_from_backstory(backstory, name)
+
+    return {"data":data}
     
 
