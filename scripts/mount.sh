@@ -4,9 +4,9 @@
 NFSIP="10.42.0.145" 
 
 if [ "$1" == "unmount" ]; then
-    umount -l $PWD/models
+    sudo umount -l $PWD/models
 else
-    mount -o user -v -t nfs $NFSIP:/home/nfs/models $PWD/models
+    sudo mount -o user -v -t nfs $NFSIP:/home/nfs/models $PWD/models
 fi
 
-# Note: It is not a good idea to keep the model on the NFS. cp the model out of the NFS and then use it instead of using it as a NAS.
+# Note: It is not a good idea to keep the model on the NFS. Copy the model out of the NFS and then use it instead of using it as a NAS.
