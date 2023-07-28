@@ -10,4 +10,3 @@
 # Development Files
 .env
 models/*.bin
-**/*.db
