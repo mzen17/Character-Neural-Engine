@@ -8,4 +8,5 @@ test1:
   script:
     - pip install poetry
     - poetry install
+    - poetry run sqlite3 ./src/processors/test.db
     - poetry run pytest
