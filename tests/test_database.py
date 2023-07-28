@@ -15,8 +15,7 @@ def test__single_row():
     dbp.push_conversation_to_chatID(20, userinput, output)
     assert dbp.get_conversation(20) == [ [{ 'input': 'Hello!', 'output': 'Hi!'}], "{}", key]
 
-
-def test_db_multirow():
+def test__db_two_rows():
     key = dbp.spawnKey(50)
     userinputs = ["Hello!", "I'm doing great, thank you!"]
     outputs = ["Why, Hi! How are you doing?", "That's great to hear!"]

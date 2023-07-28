@@ -2,10 +2,25 @@ image: python:latest
 
 stages:
   - test
+  - build
+  - evaluation
 
-test1:
+testing:
   stage: test
   script:
+    - touch test.db
     - pip install poetry
     - poetry install
     - poetry run pytest
+    - rm test.db
+
+building:
+  stage: build
+  script:
+    - touch test.db
+    - docker built -t sxcne .
+
+evaluating:
+  stage: evaluation
+  script:
+    - echo not implemented yet!

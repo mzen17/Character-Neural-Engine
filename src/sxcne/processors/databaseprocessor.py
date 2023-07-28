@@ -13,7 +13,7 @@ import os
 
 dev = False if "NODE_ENV" not in os.environ else (os.environ["NODE_ENV"] == "dev")
 
-connection = sqlite3.connect("./test.db")
+connection = sqlite3.connect("./test.db", check_same_thread=False)
 
 
 # Key -> Token generated to make sure others cannot step on each other's chats.
@@ -34,7 +34,6 @@ def connect():
 
 # Delete the DB each time (data in this SQL is not important)
 def initialize():
-    connection = sqlite3.connect("./test.db")
 
     # SQLite does not support arrays so initialize user inputs and character outputs as text as JSON.
     sql_command = "CREATE TABLE IF NOT EXISTS messages(chatid INTEGER PRIMARY KEY, conversation TEXT, additionBackstory TEXT, cacheToken TEXT)"
@@ -43,7 +42,6 @@ def initialize():
 
 # Clean up the DB to reset it, as this is just a session store.
 def cleanup():
-    connection = sqlite3.connect("./test.db")
 
     sql_command = "DROP TABLE IF EXISTS messages"
     connection.execute(sql_command)
@@ -54,7 +52,6 @@ def cleanup():
 
 # Send conversation to the context of the chatID
 def push_conversation_to_chatID(chatID: int, input: str, output: str, newEvent: Optional[str] = None):
-    connection = sqlite3.connect("./test.db")
     conversation_data = get_conversation(chatID)
 
     if conversation_data is not None:
@@ -75,7 +72,6 @@ def push_conversation_to_chatID(chatID: int, input: str, output: str, newEvent: 
 
 
 def get_conversation(chatID: int):
-    connection = sqlite3.connect("./test.db")
     sql_command = "SELECT conversation, additionBackstory, cacheToken FROM messages WHERE chatid = ?"
     cursor = connection.execute(sql_command, [chatID])
     row = cursor.fetchone()
@@ -99,7 +95,6 @@ def spawnKey(chatID: int):
     if dev:
         print("Added Session: ", session)
 
-    connection = sqlite3.connect("./test.db")
 
     empty_conversation = json.dumps([])
     sql_command = "INSERT INTO messages (chatid, conversation, additionBackstory, cacheToken) VALUES (?,?,?,?)"
@@ -119,6 +114,5 @@ def authenticateSession(chatID: int, token: str):
 
 # Clean row, called before using to keep row authentic
 def purgeRowKey(chatID: int):
-    connection = sqlite3.connect("./test.db")
     sql_command = "DELETE FROM messages WHERE chatid = ?"
     connection.execute(sql_command, (chatID,))

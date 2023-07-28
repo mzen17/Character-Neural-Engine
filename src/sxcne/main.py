@@ -30,8 +30,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-server.set_server_url(os.environ["LLAMA_SERVER"])
-print(server.url)
+if "NODE_ENV" in os.environ and os.environ["NODE_ENV"] == "dev":
+    prod_mode = False
+else:
+    prod_mode = True
+
+
+if "LLAMA_SERVER" in os.environ:
+    server.set_server_url(os.environ["LLAMA_SERVER"])
+    print(server.url)
+else:
+    if(prod_mode):
+        print("CRITICAL WARNING: LLAMA BACKEND SERVER WAS NOT SET!! APP WILL NOT WORK!")
+        exit
+    else:
+        print("Warning: Llama backend was not set.")
 
 @app.post("/ask/")
 async def response(input: MessageRequest):
@@ -39,7 +52,7 @@ async def response(input: MessageRequest):
 
     # Ensure request validation
     print("SESSION: ", input.session)
-    if (os.environ['NODE_ENV'] == "dev"):
+    if (not prod_mode):
         print("Warning! This is a development session!")
     elif (input.session is None):
         raise HTTPException(status_code=418, detail="Your app must first grab a key from the /genkey/ endpoint. This is to validate sessions so user chats cannot step on top of each other.")
