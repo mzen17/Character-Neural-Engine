@@ -1,5 +1,4 @@
 # FastAPI Libs
-from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 # Standard Testing Libs

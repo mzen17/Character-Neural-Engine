@@ -4,7 +4,6 @@
 # If not, read https://starlightx.io/licenses/sxpl.txt
 
 import requests
-from typing import List
 
 # Internal Libs
 import sxcne.processors.promptprocessor as promptprocessor
