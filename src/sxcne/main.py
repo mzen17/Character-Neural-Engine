@@ -5,18 +5,23 @@
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+import openai
 
 import json
 import os
 
 from sxcne.models.inputs import MessageRequest
 import sxcne.processors.serverprocessor as server
+import sxcne.processors.openai.processor as openai_server
 import sxcne.processors.databaseprocessor as db
 
 
 app = FastAPI()
 db.cleanup()
 db.initialize()
+openai.api_key = os.getenv("KEY")
+openai.organization = os.getenv("ORG")
+
 
 origins = [
     "*",
@@ -35,10 +40,14 @@ if "NODE_ENV" in os.environ and os.environ["NODE_ENV"] == "dev":
 else:
     prod_mode = True
 
+openai_mode = False
 
 if "LLAMA_SERVER" in os.environ:
     server.set_server_url(os.environ["LLAMA_SERVER"])
     print(server.url)
+elif "KEY" in os.environ:
+    print("Deploying with OpenAI...")
+    openai_mode = True
 else:
     if(prod_mode):
         print("CRITICAL WARNING: LLAMA BACKEND SERVER WAS NOT SET!! APP WILL NOT WORK!")
@@ -48,7 +57,8 @@ else:
 
 @app.post("/ask/")
 async def response(input: MessageRequest):
-    server.set_server_url(os.environ["LLAMA_SERVER"])
+    if not openai_mode:
+        server.set_server_url(os.environ["LLAMA_SERVER"])
 
     # Ensure request validation
     print("SESSION: ", input.session)
@@ -99,20 +109,26 @@ async def response(input: MessageRequest):
     personality = (characterdata["characters"][spi]["personality"])
     backstory = (characterdata["characters"][spi]["backstory"])
 
-    knowledge_base = server.create_context_from_backstory(backstory, name)
-    print(knowledge_base)
+    if not openai_mode:
+        knowledge_base = server.create_context_from_backstory(backstory, name)
+        print(knowledge_base)
+    else:
+        knowledge_base = characterdata["characters"][spi]["learned"]
 
     # Paramaters
     message = input.message
-
     context = db.get_conversation(input.id)
 
     if (context == None):
         context = [[],'']
 
     # Get Response
-    data = server.post_message2server(message, familiarity, name, personality, context[0], knowledge_base)
-    db.push_conversation_to_chatID(input.id,input.message,data["reply"])
+    if openai_mode:
+        data = openai_server.post_message2OpenAI(message, familiarity, name, personality, context[0], knowledge_base)
+
+    else:
+        data = server.post_message2server(message, familiarity, name, personality, context[0], knowledge_base)
+        db.push_conversation_to_chatID(input.id,input.message,data["reply"])
 
     return {"response": data["reply"], "emotions" : data["emotion"]}
 
@@ -145,6 +161,6 @@ def gencontext():
     print(backstory)
     data = server.create_context_from_backstory(backstory, name)
 
-    return {"data":data}
+    return {"data": data}
     
 

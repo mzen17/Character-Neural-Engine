@@ -1,17 +1,50 @@
 # StarlightX Character Neural Engine
-This is the StarlightX Neural Engine repository.
-
-We bring the bleeding edge Machine Learning technologies (Llama2)
+We are bringing bleeding edge Machine Learning technologies (Llama 2, GPT3.5/4)
 directly into gameplay!
-## Run Server
+
+## Introduction
+The backend process (What happens in the back):
+
+1. The server recieves a user message. I.e ("Hello, bob!")
+
+2. The server looks to see if user exists, and loads its "baked", 
+base data, that all conversations will build off of.
+
+3. The server then looks into the database, to see if there are addition
+context it needs. For example, previous user messages, new events that happened,
+etc. If there are any, it loads them in as well.
+
+4. The server generates the characters knowledge-set based off of the past events.
+For example, if there were three events, "Bob found tree by rock", "Bob found tree
+by other rock", "Bob found tree by another rock", then it will add something
+along the lines of "Bob thinks/knows (can vary) that trees are by rocks". It checks
+the entire event, partially to save both cost (model runtime performance), and to
+merge conflicting events correctly. 
+
+5. The server then loads the context of previous messages, if any, into a format
+that Llama can understand.
+
+6. The server then processes the entire prompt, engineering it in this format:
+
+`Transcript of a dialog, where {name} interacts with {familiarity}. {name} is {personality}, and knows {knowledgebase}. {context} {familiarity}: {message} | {name}:"`. 
+
+7. The prompt is sent to a LLM and gets a response. Using the response it gets, it reruns the response into an emotions detector, also powered by a LLM, and filters out useful emotions
+that change state.
+
+8. Finally, it formats up both of them and returns them both.
+
+
+## Self Deployments
 To run from the server, there are scripts provided to run. 
 Linux and MacOS users use the serve.sh, and Window users use the serve.bat.
 
-For the inference server, run the inference-server.sh script, or if you already have,
-just run the binary in the library using paramaters in the inference-server script.
-Then, drop models into the Models folder.
+For the backend, create a .env file with the data, source it, and then
+use OpenAIs API (given you have a key and token). If not, deploy the 
+llama.cpp server from [their repository](https://github.com/ggerganov/llama.cpp)
 
-Note: The binaries in the lib/ folder are compiled on and are for a Redhat >8 equivalent.
+Open AI Usage: `./scripts/serve.sh $KEY $ORG`
+
+LLama Server Usage: `./scripts/serve.sh $LLAMA_SERVER`
 
 # Docs and Help
 For documentation on how to use this API, refer to the Wiki.
@@ -19,15 +52,10 @@ For documentation on how to use this API, refer to the Wiki.
 ## Basic API
 
 To integrate with the server with an app, first send a GET to https://{url-of-backend}/genkey/
-
 This returns a JSON response with 2 paramaters, a key and a session token.
-
 The key is for tracking context of the model, and the session token is to prevent others from corrupting
-
 other's context sessions. Once you have the tokens, send a POST to https://{url-of-backend}/ask/ with 
-
 the following JSON data:
-
 
 `character | string`
 
@@ -60,6 +88,7 @@ etc. We will attempt to fix this before our launch by finetunning the model we u
 The emotions portion of the AI engine is extremely inaccurate, due to a feed through to 
 Llama instead of a dedicated AI. We expect this to be patched relatively soon.
 the model talk with generic "chatbot" like tones. 
+
 # License
 This repository is licensed under the StarlightX Public License only.
 To learn more, visit https://starlightx.io/licenses.
@@ -74,22 +103,18 @@ We do not offer custom enterprise licenses, as the SXPL was made as
 an alternative license to creative works such as games, without needing to
 disclose source.
 
-
 # Development
 The project uses a FastAPI python backend, managed with Poetry.
-It is compatible with llama.cpp server, and
-will be compatible with OpenAI's GPT3.5 and GPT4.
-
-Note: Do not commit **any** Facebook Llama weights into this repository, or display links
-to Llama weights anywhere in this repository for any reason. To get the official Llama 
-weights, get them from [Facebook](https://ai.meta.com).
+It is compatible with llama.cpp server, and is compatible with 
+OpenAI's GPT3.5 and GPT4.
 
 # Performance
 We are currently working on the performance of the model, and finetuning the prompts. We
 are also looking into finetuning Llama 2 to support personalization more.
+
 ## Hardware Performance
 
-The inference server runs fairly well on midrange hardware. For reference,
+The inference server runs fairly well with INT4 models on midrange hardware. For reference,
 there is a ~26s inference time on a AMD Ryzen 5800H.
 
 All of the below is at n_threads = physical cores. Time per response are a 3 sample average.
@@ -103,9 +128,13 @@ All of the below is at n_threads = physical cores. Time per response are a 3 sam
 
 ## Future Optimizations
 
-We are looking to swap out the emotions AI to a dedicated text -> emotions AI. 
+* We are looking to swap out the emotions AI to a dedicated text -> emotions AI. 
 This will bring significant performance in both the AI model and the hardware,
 as they are no longer wrapped to such a large model.
 
-For the game [Light the World](https://ltw.starlightx.io), we'll likely bake the FastAPi
-into a C++ file and then deploy to Unreal Engine as a binary.
+* Personality baker is also something that we will need to implement, as personality comes from events.
+
+* Will probably need to finetune Llama V2 to perform better on backstory -> personality better. This will likely be implemented in August.
+
+* For the game [Light the World](https://ltw.starlightx.io), we'll need to bake the FastAPi
+into a C++ file and then deploy to Unreal Engine as a binary. 

@@ -64,3 +64,6 @@ def emotions_filter(sentence: str):
 
     return result
 
+def get_last(input_string, amount):
+    return input_string[-amount:]
+

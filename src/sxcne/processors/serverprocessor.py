@@ -11,7 +11,6 @@ import sxcne.utilities as utils
 
 url = ""
 
-
 def set_server_url(url_input: str):
     global url
     url = "http://" + url_input
@@ -64,6 +63,21 @@ def create_context_from_backstory(backstory: str, name: str):
     print(prompt)
 
     return response_data
+
+def create_context_from_backstory(backstory: str, name: str):
+    event_merge = ""
+
+    for event in backstory:
+        event_merge = event_merge + event + ", "
+
+    prompt = promptprocessor.gencontextprocessor(event_merge, name)
+    data = {"prompt": prompt,"n_predict": 128, "temperature":0.1}
+    response = requests.post(url+"/completion", json = data).json()
+    response_data = utils.slash_sentences(response["content"])
+
+    print(prompt)
+
+    return response_data
     
 def get_emotions(message: str):
     prompt = promptprocessor.emotionprocessor(message)
@@ -76,7 +90,3 @@ def get_emotions(message: str):
     emotion_data = utils.emotions_filter(emotion["content"])
 
     return emotion_data
-
-    
-
-    

@@ -18,7 +18,7 @@ building:
   stage: build
   script:
     - touch test.db
-    - docker built -t sxcne .
+    - docker build -t sxcne .
 
 evaluating:
   stage: evaluation

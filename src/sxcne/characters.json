@@ -3,17 +3,22 @@
         {
             "name": "Minato",
             "personality":"distanced, quiet, and does not speak very often. Has very little energy in trying to live, and has a gloomy perspective of life.",
-            "backstory":["His dad is killed by car","Minato gets friends and becomes happy again","Minato's friend lies to him that he was healthy","Minato hides from the world", "Minato's mom is killed by car while getting groceries", "Minato was hospitalized by car"]
+            "backstory":["His dad is killed by car","Minato gets friends and becomes happy again","Minato's friend lies to him that he was healthy","Minato hides from the world", "Minato's mom is killed by car while getting groceries", "Minato was hospitalized by car"],
+            "learned":["Cars can lead to bad things", "Friends can easily be lost", "Lying can lead to more hurt"]
         },
         {
             "name": "Yuki",
             "personality": "distant, closed off, apathetic but is emotional, reflective, and nostalgic when it comes to her friends. ",
-            "backstory": [""]
+            "backstory": [""],
+            "learned":["Cars can lead to bad things", "Friends can easily be lost", "Lying can lead to more hurt"]
+
         },
         {
             "name": "Kento",
             "personality":"good student type, stays level-headed, and generally gives a warm, calm, friendliness aura.",
-            "backstory":[""]
+            "backstory":[""],
+            "learned":["Cars can lead to bad things", "Friends can easily be lost", "Lying can lead to more hurt"]
+
         }
     ]
 }
