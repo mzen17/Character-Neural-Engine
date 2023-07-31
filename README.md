@@ -5,6 +5,8 @@ directly into gameplay!
 ## Introduction
 The backend process (What happens in the back):
 
+![SXCNE Diagram](diagrams/design.jpg)
+
 1. The server recieves a user message. I.e ("Hello, bob!")
 
 2. The server looks to see if user exists, and loads its "baked", 
