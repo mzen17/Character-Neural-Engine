@@ -42,21 +42,34 @@ else:
 
 openai_mode = False
 
-if "LLAMA_SERVER" in os.environ:
-    server.set_server_url(os.environ["LLAMA_SERVER"])
-    print(server.url)
-elif "KEY" in os.environ:
-    print("Deploying with OpenAI...")
-    openai_mode = True
+if "BACKEND" in os.environ:
+    if os.environ["BACKEND"] == "llama" and "LLAMA_SERVER" in os.environ:
+        server.set_server_url(os.environ["LLAMA_SERVER"])
+        print(server.url)
+    elif "KEY" in os.environ:
+        print("Deploying with OpenAI...")
+        openai_mode = True
 else:
     if(prod_mode):
-        print("CRITICAL WARNING: LLAMA BACKEND SERVER WAS NOT SET!! APP WILL NOT WORK!")
+        print("CRITICAL ERROR: BACKEND WAS NOT SET!! APP WILL NOT WORK!")
         exit
     else:
-        print("Warning: Llama backend was not set.")
+        print("Warning: Backend was not set. App will not work.")
+
+if not openai_mode:
+    server.set_server_url(os.environ["LLAMA_SERVER"])
+
+if "AUTH_KEY" in os.environ:
+    key = os.environ["AUTH_KEY"]
+else:
+    key = ""
 
 @app.post("/ask/")
 async def response(input: MessageRequest):
+    if key != "" and input.key != "" and input.key != key:
+        return {"error":"app rqeuires key and you are missing private key"}
+
+
     if not openai_mode:
         server.set_server_url(os.environ["LLAMA_SERVER"])
 
@@ -72,11 +85,11 @@ async def response(input: MessageRequest):
     # Some mapping checks. May be simplified in the future
     chararacter = input.character.lower()
     if(chararacter == "minato"):
-        spi = 0
+        character_index = 0
     elif(chararacter == "yuki"):
-        spi=1
+        character_index=1
     elif(chararacter == "kento"):
-        spi=2
+        character_index=2
     else:
         return {"error":"invalid character"}
     
@@ -105,15 +118,15 @@ async def response(input: MessageRequest):
     characterdata = json.loads(json_data)
 
     # Get Character Data
-    name = (characterdata["characters"][spi]["name"])
-    personality = (characterdata["characters"][spi]["personality"])
-    backstory = (characterdata["characters"][spi]["backstory"])
+    name = (characterdata["characters"][character_index]["name"])
+    personality = (characterdata["characters"][character_index]["personality"])
+    backstory = (characterdata["characters"][character_index]["backstory"])
 
     if not openai_mode:
         knowledge_base = server.create_context_from_backstory(backstory, name)
         print(knowledge_base)
     else:
-        knowledge_base = characterdata["characters"][spi]["learned"]
+        knowledge_base = characterdata["characters"][character_index]["learned"]
 
     # Paramaters
     message = input.message
