@@ -35,6 +35,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+key=""
+
 if "NODE_ENV" in os.environ and os.environ["NODE_ENV"] == "dev":
     prod_mode = False
 else:
@@ -43,10 +45,17 @@ else:
 openai_mode = False
 
 if "BACKEND" in os.environ:
-    if os.environ["BACKEND"] == "llama" and "LLAMA_SERVER" in os.environ:
+    if os.environ["BACKEND"] == "llama" and ("LLAMA_SERVER" in os.environ):
         server.set_server_url(os.environ["LLAMA_SERVER"])
         print(server.url)
-    elif "KEY" in os.environ:
+
+    elif os.environ["BACKEND"] == "openai" and "KEY" in os.environ:
+        if "AUTH_KEY" in os.environ:
+            key = os.environ["AUTH_KEY"]
+        else:
+            print("CRITICAL ERROR: KEY WAS NOT SET!! APP WILL NOT WORK!")
+            exit
+
         print("Deploying with OpenAI...")
         openai_mode = True
 else:
@@ -56,22 +65,11 @@ else:
     else:
         print("Warning: Backend was not set. App will not work.")
 
-if not openai_mode:
-    server.set_server_url(os.environ["LLAMA_SERVER"])
-
-if "AUTH_KEY" in os.environ:
-    key = os.environ["AUTH_KEY"]
-else:
-    key = ""
 
 @app.post("/ask/")
 async def response(input: MessageRequest):
     if key != "" and input.key != "" and input.key != key:
         return {"error":"app rqeuires key and you are missing private key"}
-
-
-    if not openai_mode:
-        server.set_server_url(os.environ["LLAMA_SERVER"])
 
     # Ensure request validation
     print("SESSION: ", input.session)
@@ -123,7 +121,8 @@ async def response(input: MessageRequest):
     backstory = (characterdata["characters"][character_index]["backstory"])
 
     if not openai_mode:
-        knowledge_base = server.create_context_from_backstory(backstory, name)
+        # knowledge_base = server.create_context_from_backstory(backstory, name)
+        knowledge_base = characterdata["characters"][character_index]["learned"]
         print(knowledge_base)
     else:
         knowledge_base = characterdata["characters"][character_index]["learned"]
@@ -135,15 +134,26 @@ async def response(input: MessageRequest):
     if (context == None):
         context = [[],'']
 
-    # Get Response
-    if openai_mode:
-        data = openai_server.post_message2OpenAI(message, familiarity, name, personality, context[0], knowledge_base)
-
+    # Check Cache
+    if (db.check_cache(message + " " + str(familiarity) + " " +  name + " " + str(context[0]))):
+        response = db.get_cache(message + " " + str(familiarity) + " " +  name + " " + str(context[0]))
+        print("Using cache to serve response.")
     else:
-        data = server.post_message2server(message, familiarity, name, personality, context[0], knowledge_base)
-        db.push_conversation_to_chatID(input.id,input.message,data["reply"])
+        # Get Response
+        if openai_mode:
+            response = openai_server.post_message2OpenAI(message, familiarity, name, personality, context[0], backstory)
+        else:
+            response = server.post_message2server(message, familiarity, name, personality, context[0], backstory)
+        db.set_cache(message + " " + str(familiarity) + " " +  name + " " + str(context[0]), response)
 
-    return {"response": data["reply"], "emotions" : data["emotion"]}
+    if (db.check_cache(message)):
+        emotion = db.get_cache(message)
+    else:
+        emotion = server.get_emotions(message)
+        db.set_cache(message, emotion)
+
+    db.push_conversation_to_chatID(input.id,input.message,response)
+    return {"response": response, "emotions" : emotion}
 
 keys = list(range(1, 25000))
 
@@ -155,25 +165,4 @@ def generatekey():
     token = db.spawnKey(genkey)
     
     return {"key":genkey, "token":token}
-
-@app.get("/test/")
-def gencontext():
-        # Some weird code to get the path to the JSON file because I couldn't figure out how to do it otherwise
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    json_file_path = os.path.join(script_dir, "characters.json")
-
-    # Load JSON Data
-    with open(json_file_path, "r") as file:
-        json_data = file.read()
-    
-    characterdata = json.loads(json_data)
-
-    # Get Character Data
-    name = (characterdata["characters"][0]["name"])
-    backstory = (characterdata["characters"][0]["backstory"])
-    print(backstory)
-    data = server.create_context_from_backstory(backstory, name)
-
-    return {"data": data}
-    
 

@@ -41,13 +41,10 @@ def post_message2server(message:str, familiarity:str, name:str, personality:str,
     response = requests.post(url+"/completion", json = data).json()
     response_data = utils.slash_sentences(utils.filter_out_text_between_asterisks(response["content"]))
 
-    # Emotions
-    emotions = get_emotions(message)
-
     if (response_data == "" or response_data == " "):
         response_data = "..."
 
-    return {"reply": response_data, "emotion": emotions}
+    return response_data
 
 
 def create_context_from_backstory(backstory: str, name: str):
@@ -57,6 +54,7 @@ def create_context_from_backstory(backstory: str, name: str):
         event_merge = event_merge + event + ", "
 
     prompt = promptprocessor.gencontextprocessor(event_merge, name)
+
     # Params
     data = {"prompt": prompt,"n_predict": 128, "temperature":0.1}
     response = requests.post(url+"/completion", json = data).json()
@@ -82,13 +80,4 @@ def create_context_from_backstory(backstory: str, name: str):
     return response_data
     
 def get_emotions(message: str):
-    prompt = promptprocessor.emotionprocessor(message)
-    data = {"prompt": prompt,"n_predict": 16, "temperature":0.1}
-
-    print("Emotions Prompt: ",prompt) # Logging purposes
-
-    emotion = requests.post(url+"/completion", json = data).json()
-    print (emotion["content"])
-    emotion_data = utils.emotions_filter(emotion["content"])
-
-    return emotion_data
+    return utils.get_emotion(message)

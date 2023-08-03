@@ -43,6 +43,9 @@ def initialize():
     sql_command = "CREATE TABLE IF NOT EXISTS messages(chatid INTEGER PRIMARY KEY, conversation TEXT, additionBackstory TEXT, cacheToken TEXT)"
     connection.execute(sql_command)
 
+    sql_command = "CREATE TABLE IF NOT EXISTS cache(input TEXT PRIMARY KEY, output TEXT)"
+    connection.execute(sql_command)
+
 
 # Clean up the DB to reset it, as this is just a session store.
 def cleanup():
@@ -120,3 +123,26 @@ def authenticateSession(chatID: int, token: str):
 def purgeRowKey(chatID: int):
     sql_command = "DELETE FROM messages WHERE chatid = ?"
     connection.execute(sql_command, (chatID,))
+
+# Check if response is cached
+def check_cache(input_str: str):
+    sql_command = "SELECT EXISTS(SELECT 1 FROM cache WHERE input = ? LIMIT 1)"
+    cursor = connection.execute(sql_command, (input_str,))
+    row = cursor.fetchone()
+    return bool(row[0])
+
+# Get a cache output
+def get_cache(input_str: str):
+    sql_command = "SELECT output FROM cache WHERE input = ?"
+    cursor = connection.execute(sql_command, (input_str,))
+    row = cursor.fetchone()
+    if row:
+        return row[0]
+    return None
+
+# Input a cache
+def set_cache(input_str: str, output_str: str):
+    sql_command = "INSERT OR REPLACE INTO cache (input, output) VALUES (?, ?)"
+    connection.execute(sql_command, (input_str, output_str))
+    connection.commit()
+

@@ -1,3 +1,8 @@
+# Copyright (C) 2023, StarlightX.
+# This source is covered under the StarlightX Public License v1.
+# You should have recieved a copy of the SXPLv1 with this code.
+# If not, read https://starlightx.io/licenses/SXPLv1.txt
+
 # Utilities class for processing output of LLMs
 
 import re
@@ -66,4 +71,20 @@ def emotions_filter(sentence: str):
 
 def get_last(input_string, amount):
     return input_string[-amount:]
+
+from transformers import AutoTokenizer, AutoModelWithLMHead
+
+tokenizer = AutoTokenizer.from_pretrained("mrm8488/t5-base-finetuned-emotion")
+
+model = AutoModelWithLMHead.from_pretrained("mrm8488/t5-base-finetuned-emotion")
+
+def get_emotion(text):
+  input_ids = tokenizer.encode(text + '</s>', return_tensors='pt')
+
+  output = model.generate(input_ids=input_ids,
+               max_length=2)
+  
+  dec = [tokenizer.decode(ids) for ids in output]
+  label = dec[0]
+  return label
 
