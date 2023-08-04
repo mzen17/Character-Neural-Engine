@@ -8,12 +8,12 @@ import secrets
 import string
 from typing import Optional
 import os
-import psycopg
+import psycopg as psycopg
 
 dev = False if "NODE_ENV" not in os.environ else (os.environ["NODE_ENV"] == "dev")
 
 # Check if environment variables are set
-if ("DB_NAME" not in os.environ) or ("DB_USER" not in os.environ) or ("DB_PASSWORD" not in os.environ) or ("DB_HOST" not in os.environ) or ("DB_PORT" not in os.environ):
+if ("DB_NAME" not in os.environ) or ("DB_USER" not in os.environ) or ("DB_PASS" not in os.environ) or ("DB_HOST" not in os.environ) or ("DB_PORT" not in os.environ):
     print("CRITICAL ERROR: DATABASE CONFIGS NOT SET!! APP WILL NOT WORK!")
 
     # Print which one was not set
@@ -21,7 +21,7 @@ if ("DB_NAME" not in os.environ) or ("DB_USER" not in os.environ) or ("DB_PASSWO
         print("DB_NAME not set!")
     if "DB_USER" not in os.environ:
         print("DB_USER not set!")
-    if "DB_PASSWORD" not in os.environ:
+    if "DB_PASS" not in os.environ:
         print("DB_PASSWORD not set!")
     if "DB_HOST" not in os.environ:
         print("DB_HOST not set!")
@@ -70,7 +70,7 @@ def initialize():
     sql_command = "CREATE TABLE IF NOT EXISTS messages(chatid SERIAL PRIMARY KEY, conversation JSONB[], additionBackstory TEXT, cacheToken TEXT)"
     cursor.execute(sql_command)
 
-    sql_command = "CREATE TABLE IF NOT EXISTS cache(input vector(384) PRIMARY KEY, output TEXT)"
+    sql_command = "CREATE TABLE IF NOT EXISTS cache(id serial PRIMARY KEY, input vector(384), output TEXT)"
     cursor.execute(sql_command)
 
     connection.commit()
@@ -202,24 +202,7 @@ def purgeRowKey(chatID: int):
     connection.commit()
 
 ## Cache server commands
-
-def check_cache(input_str: str):
-    connection = psycopg.connect(
-        dbname=db_name,
-        user=db_user,
-        password=db_pass,
-        host=db_host,
-        port=db_port,
-    )
-    cursor = connection.cursor()
-
-    sql_command = "SELECT EXISTS(SELECT 1 FROM cache WHERE input = %s)"
-    cursor.execute(sql_command, (input_str,))
-    row = cursor.fetchone()
-    return bool(row[0])
-
-
-def get_cache(input_str: str):
+def get_cache(input_vector, similarity_threshold=0.5):
     connection = psycopg.connect(
         dbname=db_name,
         user=db_user,
@@ -230,15 +213,25 @@ def get_cache(input_str: str):
 
     cursor = connection.cursor()
 
-    sql_command = "SELECT output FROM cache WHERE input = %s"
-    cursor.execute(sql_command, (input_str,))
+    # Perform a similarity search using the pgvector operator <->
+    sql_command = """
+        SELECT output
+        FROM cache
+        WHERE input <-> %s < %s
+        ORDER BY input <-> %s
+        LIMIT 1;
+        """
+
+    vec = "[" + ",".join(map(str, input_vector)) + "]"
+
+    cursor.execute(sql_command, (vec, similarity_threshold, vec))
     row = cursor.fetchone()
     if row:
         return row[0]
     return None
 
 
-def set_cache(input_str: str, output_str: str):
+def set_cache(input_str, output_str: str):
     connection = psycopg.connect(
         dbname=db_name,
         user=db_user,
@@ -248,7 +241,10 @@ def set_cache(input_str: str, output_str: str):
     )
     cursor = connection.cursor()
 
-    sql_command = "INSERT INTO cache (input, output) VALUES (%s, %s) ON CONFLICT (input) DO UPDATE SET output = %s"
-    cursor.execute(sql_command, (input_str, output_str, output_str))
+    if(get_cache(input_str) != None):
+        sql_command = "DELETE FROM cache WHERE input = %s"
+
+    sql_command = "INSERT INTO cache (input, output) VALUES (%s, %s)"
+    cursor.execute(sql_command, (input_str, output_str))
 
     connection.commit()

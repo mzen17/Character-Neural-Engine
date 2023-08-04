@@ -5,24 +5,19 @@
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-import openai
-
-import json
 import os
 
 from sxcne.models.inputs import MessageRequest
-import sxcne.processors.serverprocessor as server
-import sxcne.processors.openai.processor as openai_server
-import sxcne.processors.databaseprocessor as db
+import sxcne.processors.server as server
+
+import sxcne.processors.database as db
+import sxcne.processors.character as character
 import sxcne.utilities as util
 
 
 app = FastAPI()
 db.cleanup()
 db.initialize()
-openai.api_key = os.getenv("KEY")
-openai.organization = os.getenv("ORG")
-
 
 origins = [
     "*",
@@ -70,7 +65,7 @@ else:
 @app.post("/ask/")
 async def response(input: MessageRequest):
     if key != "" and input.key != "" and input.key != key:
-        return {"error":"app rqeuires key and you are missing private key"}
+        return {"error":"app requires key and you are missing private key"}
 
     # Ensure request validation
     print("SESSION: ", input.session)
@@ -81,52 +76,10 @@ async def response(input: MessageRequest):
     elif (not db.authenticateSession(input.id, input.session)):
         raise HTTPException(status_code=401, detail="Your app session is out of date. Try to reload your browser")
 
-    # Some mapping checks. May be simplified in the future
-    chararacter = input.character.lower()
-    if(chararacter == "minato"):
-        character_index = 0
-    elif(chararacter == "yuki"):
-        character_index=1
-    elif(chararacter == "kento"):
-        character_index=2
-    else:
-        return {"error":"invalid character"}
-    
-    if (input.person_asking is not None):
-        if(input.person_asking.lower() == "minato"):
-            familiarity = "a friend"
-        elif(input.person_asking.lower() == "yuki"):
-            familiarity = "a friend"
-        elif(input.person_asking.lower() == "kento"):
-            familiarity = "a friend"
-        else:
-            familiarity = "a stranger"
-    else:
-        familiarity = "a stranger"
-    
 
-
-    # Some weird code to get the path to the JSON file because I couldn't figure out how to do it otherwise
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    json_file_path = os.path.join(script_dir, "characters.json")
-
-    # Load JSON Data
-    with open(json_file_path, "r") as file:
-        json_data = file.read()
-    
-    characterdata = json.loads(json_data)
-
-    # Get Character Data
-    name = (characterdata["characters"][character_index]["name"])
-    personality = (characterdata["characters"][character_index]["personality"])
-    backstory = (characterdata["characters"][character_index]["backstory"])
-
-    if not openai_mode:
-        # knowledge_base = server.create_context_from_backstory(backstory, name)
-        knowledge_base = characterdata["characters"][character_index]["learned"]
-        print(knowledge_base)
-    else:
-        knowledge_base = characterdata["characters"][character_index]["learned"]
+    # Get Character Data using character processor
+    index, familiarity = character.get_character_index(input.character, input.person_asking)
+    name, personality, backstory, knowledge_base = character.get_character_data_from_index(index)
 
     # Paramaters
     message = input.message
@@ -135,27 +88,15 @@ async def response(input: MessageRequest):
     if (context == None):
         context = [[],'']
 
-    # Check Cache
-    message_cache_embedding = (util.simplify_sentence(message) + " " + str(familiarity) + " " +  name + " " + util.simplify_sentence(str(context[0])))
-    print(message_cache_embedding)
-    if (db.check_cache(message_cache_embedding)):
-        response = db.get_cache(message_cache_embedding)
-        print("Using cache to serve response.")
-    else:
-        # Get Response
-        if openai_mode:
-            response = openai_server.post_message2OpenAI(message, familiarity, name, personality, context[0], backstory)
-        else:
-            response = server.post_message2server(message, familiarity, name, personality, context[0], backstory)
-        db.set_cache(message_cache_embedding, response)
-
+    response = server.post_message2server(message, familiarity, name, personality, context[0], backstory)
     emotion = server.get_emotions(message)
 
     db.push_conversation_to_chatID(input.id,input.message,response)
     return {"response": response, "emotions" : emotion}
 
-keys = list(range(1, 25000))
 
+# 25000 values to rotate from, max 25000 concurrent users
+keys = list(range(1, 25000))
 @app.get("/genkey/")
 def generatekey():
     genkey = keys.pop(0)

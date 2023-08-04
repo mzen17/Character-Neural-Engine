@@ -83,38 +83,3 @@ def emotions_filter(sentence: str):
 # Get last X characters from a string to slash tokens
 def get_last(input_string, amount):
     return input_string[-amount:]
-
-
-# Emotion Get
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-
-tokenizer = AutoTokenizer.from_pretrained("mrm8488/t5-base-finetuned-emotion")
-model = AutoModelForSeq2SeqLM.from_pretrained("mrm8488/t5-base-finetuned-emotion")
-
-def get_emotion(text):
-  input_ids = tokenizer.encode(text + '</s>', return_tensors='pt')
-
-  output = model.generate(input_ids=input_ids,
-               max_length=2)
-  
-  dec = [tokenizer.decode(ids) for ids in output]
-  label = dec[0]
-  return label
-
-
-import spacy
-
-def simplify_sentence(sentence):
-    # Load the spaCy English language model with word embeddings
-    nlp = spacy.load("en_core_web_sm")
-    
-    # Tokenize and parse the sentence using spaCy
-    doc = nlp(sentence)
-    
-    # Lemmatize and normalize the tokens
-    normalized_tokens = [token.lemma_.lower() for token in doc if not token.is_punct]
-    
-    # Create the normalized sentence
-    normalized_sentence = " ".join(normalized_tokens)
-    
-    return normalized_sentence

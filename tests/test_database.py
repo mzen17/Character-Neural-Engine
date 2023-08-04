@@ -1,4 +1,4 @@
-import sxcne.processors.databaseprocessor as dbp
+import sxcne.processors.database as dbp
 import os
 
 dbp.cleanup()
@@ -33,10 +33,3 @@ def test__db_two_rows():
 def test__db_auth():
     key = dbp.spawnKey(80)
     dbp.authenticateSession(80, key)
-
-
-# Test cacheing system
-def test__cache():
-    dbp.set_cache("Hello!", "Hi!")
-    assert dbp.check_cache("Hello!") == True
-    assert dbp.get_cache("Hello!") == "Hi!"
