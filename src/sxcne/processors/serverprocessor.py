@@ -37,7 +37,7 @@ def post_message2server(message:str, familiarity:str, name:str, personality:str,
     prompt = promptprocessor.dialogueprocessor(message, familiarity, name, personality, context_merge, backstory)
     print("Prompt: ",prompt)
 
-    data = {"prompt": prompt,"n_predict": 64, "temperature":0.5}
+    data = {"prompt": prompt,"n_predict": 30, "temperature":0.5}
     response = requests.post(url+"/completion", json = data).json()
     response_data = utils.slash_sentences(utils.filter_out_text_between_asterisks(response["content"]))
 

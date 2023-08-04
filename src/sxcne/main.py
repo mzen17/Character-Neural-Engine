@@ -14,6 +14,7 @@ from sxcne.models.inputs import MessageRequest
 import sxcne.processors.serverprocessor as server
 import sxcne.processors.openai.processor as openai_server
 import sxcne.processors.databaseprocessor as db
+import sxcne.utilities as util
 
 
 app = FastAPI()
@@ -76,7 +77,7 @@ async def response(input: MessageRequest):
     if (not prod_mode):
         print("Warning! This is a development session!")
     elif (input.session is None):
-        raise HTTPException(status_code=418, detail="Your app must first grab a key from the /genkey/ endpoint. This is to validate sessions so user chats cannot step on top of each other.")
+        raise HTTPException(status_code=403, detail="Your app must first grab a key from the /genkey/ endpoint. This is to validate sessions so user chats cannot step on top of each other.")
     elif (not db.authenticateSession(input.id, input.session)):
         raise HTTPException(status_code=401, detail="Your app session is out of date. Try to reload your browser")
 
@@ -135,8 +136,10 @@ async def response(input: MessageRequest):
         context = [[],'']
 
     # Check Cache
-    if (db.check_cache(message + " " + str(familiarity) + " " +  name + " " + str(context[0]))):
-        response = db.get_cache(message + " " + str(familiarity) + " " +  name + " " + str(context[0]))
+    message_cache_embedding = (util.simplify_sentence(message) + " " + str(familiarity) + " " +  name + " " + util.simplify_sentence(str(context[0])))
+    print(message_cache_embedding)
+    if (db.check_cache(message_cache_embedding)):
+        response = db.get_cache(message_cache_embedding)
         print("Using cache to serve response.")
     else:
         # Get Response
@@ -144,13 +147,9 @@ async def response(input: MessageRequest):
             response = openai_server.post_message2OpenAI(message, familiarity, name, personality, context[0], backstory)
         else:
             response = server.post_message2server(message, familiarity, name, personality, context[0], backstory)
-        db.set_cache(message + " " + str(familiarity) + " " +  name + " " + str(context[0]), response)
+        db.set_cache(message_cache_embedding, response)
 
-    if (db.check_cache(message)):
-        emotion = db.get_cache(message)
-    else:
-        emotion = server.get_emotions(message)
-        db.set_cache(message, emotion)
+    emotion = server.get_emotions(message)
 
     db.push_conversation_to_chatID(input.id,input.message,response)
     return {"response": response, "emotions" : emotion}

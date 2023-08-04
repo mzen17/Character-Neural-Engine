@@ -3,110 +3,177 @@
 # You should have recieved a copy of the SXPLv1 with this code.
 # If not, read https://starlightx.io/licenses/sxpl.txt
 
-import sqlite3
 import json
 import secrets
 import string
-
 from typing import Optional
 import os
+import psycopg
 
 dev = False if "NODE_ENV" not in os.environ else (os.environ["NODE_ENV"] == "dev")
 
-connection = sqlite3.connect("./test.db", check_same_thread=False)
+# Check if environment variables are set
+if ("DB_NAME" not in os.environ) or ("DB_USER" not in os.environ) or ("DB_PASSWORD" not in os.environ) or ("DB_HOST" not in os.environ) or ("DB_PORT" not in os.environ):
+    print("CRITICAL ERROR: DATABASE CONFIGS NOT SET!! APP WILL NOT WORK!")
 
+    # Print which one was not set
+    if "DB_NAME" not in os.environ:
+        print("DB_NAME not set!")
+    if "DB_USER" not in os.environ:
+        print("DB_USER not set!")
+    if "DB_PASSWORD" not in os.environ:
+        print("DB_PASSWORD not set!")
+    if "DB_HOST" not in os.environ:
+        print("DB_HOST not set!")
+    if "DB_PORT" not in os.environ:
+        print("DB_PORT not set!")
+    exit
+
+# Database configs
+db_name = os.environ["DB_NAME"] if "DB_NAME" in os.environ else "postgres"
+db_user = os.environ["DB_USER"] if "DB_USER" in os.environ else "postgres"
+db_pass = os.environ["DB_PASS"] if "DB_PASS" in os.environ else "postgres"
+db_host = os.environ["DB_HOST"] if "DB_HOST" in os.environ else "localhost"
+db_port = os.environ["DB_PORT"] if "DB_PORT" in os.environ else 5432
 
 # Key -> Token generated to make sure others cannot step on each other's chats.
 def generate_random_string(length):
-    # Characters to choose from for the random string
     alphabet = string.ascii_letters + string.digits
-
-    # Use secrets.choice() to securely choose characters from the alphabet
     random_string = ''.join(secrets.choice(alphabet) for _ in range(length))
     return random_string
 
-
-
 # Test connection for pytests
 def connect():
-     connection = sqlite3.connect("./test.db")
-     try:
+    try:
+        connection = psycopg.connect(
+            dbname=db_name,
+            user=db_user,
+            password=db_pass,
+            host=db_host,
+            port=db_port,
+        )
         connection.cursor()
         return True
-     except Exception as ex:
+    except Exception as ex:
         return False
 
-# Delete the DB each time (data in this SQL is not important)
+
 def initialize():
+    connection = psycopg.connect(
+        dbname=db_name,
+        user=db_user,
+        password=db_pass,
+        host=db_host,
+        port=db_port,
+    )
+    cursor = connection.cursor()
+    sql_command = "CREATE TABLE IF NOT EXISTS messages(chatid SERIAL PRIMARY KEY, conversation JSONB[], additionBackstory TEXT, cacheToken TEXT)"
+    cursor.execute(sql_command)
 
-    # SQLite does not support arrays so initialize user inputs and character outputs as text as JSON.
-    sql_command = "CREATE TABLE IF NOT EXISTS messages(chatid INTEGER PRIMARY KEY, conversation TEXT, additionBackstory TEXT, cacheToken TEXT)"
-    connection.execute(sql_command)
+    sql_command = "CREATE TABLE IF NOT EXISTS cache(input vector(384) PRIMARY KEY, output TEXT)"
+    cursor.execute(sql_command)
 
-    sql_command = "CREATE TABLE IF NOT EXISTS cache(input TEXT PRIMARY KEY, output TEXT)"
-    connection.execute(sql_command)
-
-
-# Clean up the DB to reset it, as this is just a session store.
-def cleanup():
-
-    sql_command = "DROP TABLE IF EXISTS messages"
-    connection.execute(sql_command)
-    
     connection.commit()
 
 
+def cleanup():
+    connection = psycopg.connect(
+        dbname=db_name,
+        user=db_user,
+        password=db_pass,
+        host=db_host,
+        port=db_port,
+    )
+    cursor = connection.cursor()
 
-# Send conversation to the context of the chatID
-def push_conversation_to_chatID(chatID: int, input: str, output: str, newEvent: Optional[str] = None):
+    sql_command = "DELETE from messages"
+    cursor.execute(sql_command)
+
+    connection.commit()
+
+
+def push_conversation_to_chatID(chatID: int, input_str: str, output_str: str, newEvent: Optional[str] = None):
+    connection = psycopg.connect(
+        dbname=db_name,
+        user=db_user,
+        password=db_pass,
+        host=db_host,
+        port=db_port,
+    )
     conversation_data = get_conversation(chatID)
 
     if conversation_data is not None:
         conversation, additionBackstory, cacheToken = conversation_data
+        print(conversation)
     else:
         conversation = []
         cacheToken = ""
-        additionBackstory = ""
+        additionBackstory = "{}"
 
-    conversation.append({"input": input, "output": output})
+    conversation.append({"input": input_str, "output": output_str})
 
     if newEvent is not None:
-        additionBackstory.append({newEvent})
+        additionBackstory.append(newEvent)
 
-    sql_command = "INSERT OR REPLACE INTO messages (chatid, conversation, cacheToken) VALUES (?, ?, ?)"
-    connection.execute(sql_command, (chatID, json.dumps(conversation), cacheToken))
+    for i in range(len(conversation)):
+        conversation[i] = json.dumps(conversation[i])
+
+    sql_command = "INSERT INTO messages (chatid, conversation, cacheToken) VALUES (%s, %s, %s) ON CONFLICT (chatid) DO UPDATE SET conversation = %s, cacheToken = %s"
+    
+    print(type(conversation))
+
+    connection.execute(sql_command, (chatID, conversation, cacheToken, conversation, cacheToken))
     connection.commit()
 
 
+# Search by chatID (index)
 def get_conversation(chatID: int):
-    sql_command = "SELECT conversation, additionBackstory, cacheToken FROM messages WHERE chatid = ?"
-    cursor = connection.execute(sql_command, [chatID])
+    connection = psycopg.connect(
+        dbname=db_name,
+        user=db_user,
+        password=db_pass,
+        host=db_host,
+        port=db_port,
+    )
+    cursor = connection.cursor()
+
+    sql_command = "SELECT conversation, additionBackstory, cacheToken FROM messages WHERE chatid = %s"
+    cursor.execute(sql_command, [chatID]) 
+
     row = cursor.fetchone()
+    cursor.close()   
+    connection.close() 
 
     if row:
         conversation, backstory, cacheToken = row
-        input_data = json.loads(conversation)
+        input_data = conversation
         if backstory is not None:
-            bg = json.loads(backstory)
+            bg = backstory
         else:
             bg = "{}"
         return [input_data, bg, cacheToken]
     return None
 
 
-# Spawn a key using a random 10 digit string
 def spawnKey(chatID: int):
+    connection = psycopg.connect(
+        dbname=db_name,
+        user=db_user,
+        password=db_pass,
+        host=db_host,
+        port=db_port,
+    )
+    cursor = connection.cursor()
+
     purgeRowKey(chatID)
     session = generate_random_string(10)
 
     if dev:
         print("Added Session: ", session)
 
+    sql_command = "INSERT INTO messages (chatid, conversation, additionBackstory, cacheToken) VALUES (%s, %s, %s, %s)"
+    cursor.execute(sql_command, (chatID, [], "{}", session))
 
-    empty_conversation = json.dumps([])
-    sql_command = "INSERT INTO messages (chatid, conversation, additionBackstory, cacheToken) VALUES (?,?,?,?)"
-
-    connection.execute(sql_command, (chatID,empty_conversation,empty_conversation,session))
     connection.commit()
     return session
 
@@ -114,35 +181,74 @@ def spawnKey(chatID: int):
 def authenticateSession(chatID: int, token: str):
     if dev:
         print("CHAT: ", chatID)
-        print("TOKEN: ",token)
+        print("TOKEN: ", token)
         print("EXPECTED_TOKEN: ", get_conversation(chatID)[2])
     return (get_conversation(chatID) is not None) and (get_conversation(chatID)[2] == token)
 
 
-# Clean row, called before using to keep row authentic
 def purgeRowKey(chatID: int):
-    sql_command = "DELETE FROM messages WHERE chatid = ?"
-    connection.execute(sql_command, (chatID,))
+    connection = psycopg.connect(
+        dbname=db_name,
+        user=db_user,
+        password=db_pass,
+        host=db_host,
+        port=db_port,
+    )
+    cursor = connection.cursor()
 
-# Check if response is cached
+    sql_command = "DELETE FROM messages WHERE chatid = %s"
+    cursor.execute(sql_command, (chatID,))
+
+    connection.commit()
+
+## Cache server commands
+
 def check_cache(input_str: str):
-    sql_command = "SELECT EXISTS(SELECT 1 FROM cache WHERE input = ? LIMIT 1)"
-    cursor = connection.execute(sql_command, (input_str,))
+    connection = psycopg.connect(
+        dbname=db_name,
+        user=db_user,
+        password=db_pass,
+        host=db_host,
+        port=db_port,
+    )
+    cursor = connection.cursor()
+
+    sql_command = "SELECT EXISTS(SELECT 1 FROM cache WHERE input = %s)"
+    cursor.execute(sql_command, (input_str,))
     row = cursor.fetchone()
     return bool(row[0])
 
-# Get a cache output
+
 def get_cache(input_str: str):
-    sql_command = "SELECT output FROM cache WHERE input = ?"
-    cursor = connection.execute(sql_command, (input_str,))
+    connection = psycopg.connect(
+        dbname=db_name,
+        user=db_user,
+        password=db_pass,
+        host=db_host,
+        port=db_port,
+    )
+
+    cursor = connection.cursor()
+
+    sql_command = "SELECT output FROM cache WHERE input = %s"
+    cursor.execute(sql_command, (input_str,))
     row = cursor.fetchone()
     if row:
         return row[0]
     return None
 
-# Input a cache
-def set_cache(input_str: str, output_str: str):
-    sql_command = "INSERT OR REPLACE INTO cache (input, output) VALUES (?, ?)"
-    connection.execute(sql_command, (input_str, output_str))
-    connection.commit()
 
+def set_cache(input_str: str, output_str: str):
+    connection = psycopg.connect(
+        dbname=db_name,
+        user=db_user,
+        password=db_pass,
+        host=db_host,
+        port=db_port,
+    )
+    cursor = connection.cursor()
+
+    sql_command = "INSERT INTO cache (input, output) VALUES (%s, %s) ON CONFLICT (input) DO UPDATE SET output = %s"
+    cursor.execute(sql_command, (input_str, output_str, output_str))
+
+    connection.commit()

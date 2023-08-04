@@ -8,7 +8,16 @@
 import re
 
 def filter_out_text_between_asterisks(text: str):
-    return re.sub('\(.*?\)', '',re.sub('\*.*?\*', '', text))
+        # Remove contents within parentheses
+    text = re.sub(r'\(.*?\)', '', text)
+    
+    # Remove asterisks and their contents
+    text = re.sub(r'\*.*?\*', '', text)
+    
+    # Remove square brackets and their contents
+    text = re.sub(r'\[.*?\]', '', text)
+    
+    return text
 
 # Sentence slasher that removes all text from the last punctation before a colon to the end of the string. Useful to ensure that there is no trailing text.
 def slash_sentences(sentence):
@@ -20,6 +29,7 @@ def slash_sentences(sentence):
             sentence = sentence[:last+1]
             break
     return sentence
+
 
 # Return a list of emotions that appear from a string
 def emotions_filter(sentence: str):
@@ -69,14 +79,17 @@ def emotions_filter(sentence: str):
 
     return result
 
+
+# Get last X characters from a string to slash tokens
 def get_last(input_string, amount):
     return input_string[-amount:]
 
-from transformers import AutoTokenizer, AutoModelWithLMHead
+
+# Emotion Get
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 tokenizer = AutoTokenizer.from_pretrained("mrm8488/t5-base-finetuned-emotion")
-
-model = AutoModelWithLMHead.from_pretrained("mrm8488/t5-base-finetuned-emotion")
+model = AutoModelForSeq2SeqLM.from_pretrained("mrm8488/t5-base-finetuned-emotion")
 
 def get_emotion(text):
   input_ids = tokenizer.encode(text + '</s>', return_tensors='pt')
@@ -88,3 +101,20 @@ def get_emotion(text):
   label = dec[0]
   return label
 
+
+import spacy
+
+def simplify_sentence(sentence):
+    # Load the spaCy English language model with word embeddings
+    nlp = spacy.load("en_core_web_sm")
+    
+    # Tokenize and parse the sentence using spaCy
+    doc = nlp(sentence)
+    
+    # Lemmatize and normalize the tokens
+    normalized_tokens = [token.lemma_.lower() for token in doc if not token.is_punct]
+    
+    # Create the normalized sentence
+    normalized_sentence = " ".join(normalized_tokens)
+    
+    return normalized_sentence
