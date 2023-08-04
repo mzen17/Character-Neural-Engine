@@ -4,12 +4,20 @@
 # If not, read https://starlightx.io/licenses/sxpl.txt
 
 import requests
+import openai
+import os
 
 # Internal Libs
-import sxcne.processors.promptprocessor as promptprocessor
+import sxcne.processors.prompt as promptprocessor
+import sxcne.processors.cache as cache
 import sxcne.utilities as utils
 
+
 url = ""
+openai.api_key = os.getenv("KEY")
+openai.organization = os.getenv("ORG")
+
+
 
 def set_server_url(url_input: str):
     global url
@@ -33,21 +41,39 @@ def post_message2server(message:str, familiarity:str, name:str, personality:str,
         context_merge += f"{familiarity}: {chat['input']} "
         context_merge += f"{name}: {chat['output']}"
 
+    # Check cache and return instantly if cache is found
+    cached_response = cache.getCached(context_merge +" " + name + " " + message)
+    if cached_response != None:
+        return cached_response
+    
+
     # Get Response
-    prompt = promptprocessor.dialogueprocessor(message, familiarity, name, personality, context_merge, backstory)
-    print("Prompt: ",prompt)
+    if ("BACKEND" in os.environ and os.environ["BACKEND"] == "openai"):
+        instruction, prompt = promptprocessor.openai_dialogueprocessor(message, familiarity, name, personality, context_merge, backstory)
+        completion = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        max_tokens=15,
+        messages=[
+            {"role": "system", "content": instruction},
+            {"role": "user", "content": prompt}
+        ])
+        response = completion.choices[0].message.content
+    
+    else:
 
-    data = {"prompt": prompt,"n_predict": 64, "temperature":0.5}
-    response = requests.post(url+"/completion", json = data).json()
+        prompt = promptprocessor.dialogueprocessor(message, familiarity, name, personality, context_merge, backstory)
+        print("Prompt: ",prompt)
+        data = {"prompt": prompt,"n_predict": 30, "temperature":0.5}
+        response = requests.post(url+"/completion", json = data).json()
+
     response_data = utils.slash_sentences(utils.filter_out_text_between_asterisks(response["content"]))
-
-    # Emotions
-    emotions = get_emotions(message)
 
     if (response_data == "" or response_data == " "):
         response_data = "..."
 
-    return {"reply": response_data, "emotion": emotions}
+    # Cache response
+    cache.updateCache(context_merge +" " + name + " " + message, response_data)
+    return response_data
 
 
 def create_context_from_backstory(backstory: str, name: str):
@@ -56,7 +82,8 @@ def create_context_from_backstory(backstory: str, name: str):
     for event in backstory:
         event_merge = event_merge + event + ", "
 
-    prompt = promptprocessor.gencontextprocessor(event_merge, name)
+    prompt = prompt.gencontextprocessor(event_merge, name)
+
     # Params
     data = {"prompt": prompt,"n_predict": 128, "temperature":0.1}
     response = requests.post(url+"/completion", json = data).json()
@@ -72,7 +99,7 @@ def create_context_from_backstory(backstory: str, name: str):
     for event in backstory:
         event_merge = event_merge + event + ", "
 
-    prompt = promptprocessor.gencontextprocessor(event_merge, name)
+    prompt = prompt.gencontextprocessor(event_merge, name)
     data = {"prompt": prompt,"n_predict": 128, "temperature":0.1}
     response = requests.post(url+"/completion", json = data).json()
     response_data = utils.slash_sentences(response["content"])
@@ -81,14 +108,7 @@ def create_context_from_backstory(backstory: str, name: str):
 
     return response_data
     
+
 def get_emotions(message: str):
-    prompt = promptprocessor.emotionprocessor(message)
-    data = {"prompt": prompt,"n_predict": 16, "temperature":0.1}
+    return cache.get_emotion(message)
 
-    print("Emotions Prompt: ",prompt) # Logging purposes
-
-    emotion = requests.post(url+"/completion", json = data).json()
-    print (emotion["content"])
-    emotion_data = utils.emotions_filter(emotion["content"])
-
-    return emotion_data

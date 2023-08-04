@@ -59,9 +59,6 @@
                         <mxPoint x="13" y="1" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="27" value="&lt;h1&gt;Backend&lt;/h1&gt;&lt;p&gt;1. Backend recieves the message.&lt;/p&gt;&lt;p&gt;2. Backend loads basic character data, and looks in the database if there have been any updates&lt;/p&gt;" style="text;html=1;strokeColor=none;fillColor=none;spacing=5;spacingTop=-20;whiteSpace=wrap;overflow=hidden;rounded=0;" parent="1" vertex="1">
-                    <mxGeometry x="445" y="370" width="190" height="180" as="geometry"/>
-                </mxCell>
             </root>
         </mxGraphModel>
     </diagram>

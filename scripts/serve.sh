@@ -13,7 +13,7 @@ elif [ "$1" == "llama" ]; then
     echo "Using Llama as backend in production!"
     poetry run uvicorn sxcne.main:app --host 0.0.0.0
 
-elif [ "$1" == "openai"]; then
+elif [ "$1" == "openai" ]; then
     export NODE_ENV=production
     export BACKEND="openai"
     export KEY="$2"
@@ -22,6 +22,9 @@ elif [ "$1" == "openai"]; then
     echo "Using OpenAI as backend in production!!"
     poetry run uvicorn sxcne.main:app --host 0.0.0.0
 
+elif [ "$1" == "envfile" ]; then
+    echo "Using env file as backend. Make sure to set the required variables!!"
+    poetry run env $(cat .env | grep -v ^# | xargs) uvicorn sxcne.main:app --host 0.0.0.0
 else 
     export NODE_ENV=production
     echo "Using variable backend. Make sure to manually set BACKEND, {KEY, ORG}, or LLAMA_SERVER!"

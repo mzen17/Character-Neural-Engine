@@ -1,7 +1,10 @@
-import sxcne.processors.databaseprocessor as dbp
+import sxcne.processors.database as dbp
+import os
 
 dbp.cleanup()
 dbp.initialize()
+
+os.environ["NODE_ENV"] = "dev"
 
 def test__connection():
     dbp.connect()
@@ -26,7 +29,7 @@ def test__db_two_rows():
     dbp.push_conversation_to_chatID(50, userinputs[1], outputs[1])
     assert dbp.get_conversation(50) == [ [{'input': 'Hello!', 'output': 'Why, Hi! How are you doing?'}, {'input': 'I\'m doing great, thank you!', 'output': 'That\'s great to hear!'}], "{}", key]
 
-# Test Cache Validation
+# Test Validation
 def test__db_auth():
     key = dbp.spawnKey(80)
     dbp.authenticateSession(80, key)

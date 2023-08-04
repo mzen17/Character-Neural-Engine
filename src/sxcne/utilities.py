@@ -1,9 +1,23 @@
+# Copyright (C) 2023, StarlightX.
+# This source is covered under the StarlightX Public License v1.
+# You should have recieved a copy of the SXPLv1 with this code.
+# If not, read https://starlightx.io/licenses/SXPLv1.txt
+
 # Utilities class for processing output of LLMs
 
 import re
 
 def filter_out_text_between_asterisks(text: str):
-    return re.sub('\(.*?\)', '',re.sub('\*.*?\*', '', text))
+        # Remove contents within parentheses
+    text = re.sub(r'\(.*?\)', '', text)
+    
+    # Remove asterisks and their contents
+    text = re.sub(r'\*.*?\*', '', text)
+    
+    # Remove square brackets and their contents
+    text = re.sub(r'\[.*?\]', '', text)
+    
+    return text
 
 # Sentence slasher that removes all text from the last punctation before a colon to the end of the string. Useful to ensure that there is no trailing text.
 def slash_sentences(sentence):
@@ -15,6 +29,7 @@ def slash_sentences(sentence):
             sentence = sentence[:last+1]
             break
     return sentence
+
 
 # Return a list of emotions that appear from a string
 def emotions_filter(sentence: str):
@@ -64,6 +79,7 @@ def emotions_filter(sentence: str):
 
     return result
 
+
+# Get last X characters from a string to slash tokens
 def get_last(input_string, amount):
     return input_string[-amount:]
-

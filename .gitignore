@@ -9,4 +9,5 @@
 
 # Development Files
 .env
-**/*.db
+*.db
+**/*.sql
