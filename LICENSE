@@ -1,79 +1,22 @@
 All files in the diagrams/ directory are under the CC-BY-SA-4.0
-The rest of the code is under either the StarlightX
-Public License shown below.
+The rest of the code is under the MIT License.
 
+Copyright (c) 2023, Mike Zeng, Steve Zeng.
 
-                    StarlightX Public License
-                     Version 1, 10 July 2023
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-Copyright (C) 2023 StarlightX. <https://starlightx.io/>
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-                  TERMS AND CONDITIONS
-
-  0. Definitions.
-
-    "Business" refers to any legal, registered 
-    business in the United States or the country this software
-    is being distributed in.
-
-    "Product" refers to any shippable, deliverable item or software. 
-
-    "Compile" means to turn plain-text source code into a form that
-    a machine can run.
-
-    "This Product" refers to the files in this directory in plain text 
-    form, or any resulting/derived program or files compiled with the 
-    code.
-
-    "Resulting/Derived works" refers to products that contain 
-    any substantial part of this product's source code or 
-    compiled binaries.
-
-    "Buisiness Product" refers to any commercial or noncommercial 
-    product owned and maintained by a buisness, as defined above.
-
-    "Business to Business" defines a relation in which one business 
-    supports a different business through providing services through
-    their business products. 
-
-  1. Your Rights
-
-      Any person obtaining a copy of this product, is granted a 
-      non-exclusive rights to use, copy, modify, merge, publish,
-      distribute, sublicense, and/or sell copies of the Software, 
-      and to permit persons to whom the Software is furnished to 
-      do so, as long as the restrictions are followed, which are
-      defined below.
-
-  2. Restrictions
-    
-    The above copyright notice and this permission notice shall be 
-    included in all copies or substantial portions of the Software.
-
-    You may not create a business product using this product made
-    for buisness to buisness purposes. That is, you cannot rebuild
-    this app and sign legal agreements, contracts, to other 
-    buisnesses with any means of providing services such as a 
-    legal agreement offering the product, support for the product, 
-    service level agreements, etc.
-
-    You may not change the license governing this product, and any 
-    further terms on derived products must also include these 
-    restrictions.
-
-  3. Termination
-
-    This license may be revised in the future, but the licensor cannot revoke the 
-    license as long as you follow the particular version of the license that 
-    you recieved. 
-
-    However, in the case that you do not follow the license terms, 
-    your rights to this product will be terminated, and you are no
-    longer licensed to distribute or use this software.
-
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
-PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
-OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
