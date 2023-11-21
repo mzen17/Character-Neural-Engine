@@ -1,6 +1,6 @@
-# StarlightX Character Neural Engine
-We are bringing bleeding edge Machine Learning technologies (Llama 2, GPT3.5/4)
-directly into gameplay!
+# Character Neural Engine
+Some bleeding edge Machine Learning technologies (Llama 2, GPT3.5/4)
+directly in gameplay.
 
 ## Introduction
 The backend process (What happens in the back):
@@ -48,9 +48,6 @@ Open AI Usage: `./scripts/serve.sh $KEY $ORG`
 
 LLama Server Usage: `./scripts/serve.sh $LLAMA_SERVER`
 
-# Docs and Help
-For documentation on how to use this API, refer to the Wiki.
-
 ## Basic API
 
 To integrate with the server with an app, first send a GET to https://{url-of-backend}/genkey/
@@ -75,35 +72,16 @@ Then, you will recieve a JSON response with the following:
 
 Now, you have a working interaction between the Character Neural Engine and your frontend!
 
-## Support
-
-Support is currently available through community forums only.
-https://community.starlightx.io
-
 # Limitations
-The model response accuracy may not be as finetuned as we want. While between characters,
+The model response accuracy may be questionable at times. While between characters,
 it talks pretty distiguisable, sometimes, it just straight up does a bad job, leaves it empty,
-etc. We will attempt to fix this before our launch by finetunning the model we use, Llama V2.
-
-
+etc.
 
 The emotions portion of the AI engine is extremely inaccurate, due to a feed through to 
-Llama instead of a dedicated AI. We expect this to be patched relatively soon.
-the model talk with generic "chatbot" like tones. 
+Llama instead of a dedicated AI. I expect this to be patched with the newer model that uses actions instead of some context crap.
 
 # License
-This repository is licensed under the StarlightX Public License only.
-To learn more, visit https://starlightx.io/licenses.
-
-Basically, you are free to use, distribute, anything you want with it
-as long as it is a consumer app and not a business app. While not Open Sourced,
-we do not have the abilty to revoke your rights to it as long as you stay
-in the Business -> Consumer segment. To use this product in
-a business app, we will add a GPL license to it sometime early 2024.
-
-We do not offer custom enterprise licenses, as the SXPL was made as
-an alternative license to creative works such as games, without needing to
-disclose source.
+This repository is licensed the MIT License.
 
 # Development
 The project uses a FastAPI python backend, managed with Poetry.
@@ -111,8 +89,7 @@ It is compatible with llama.cpp server, and is compatible with
 OpenAI's GPT3.5 and GPT4.
 
 # Performance
-We are currently working on the performance of the model, and finetuning the prompts. We
-are also looking into finetuning Llama 2 to support personalization more.
+Performance is okay. Not horrible for short contexts, but as a whole character, is really bad.
 
 ## Hardware Performance
 
@@ -129,14 +106,4 @@ All of the below is at n_threads = physical cores. Time per response are a 3 sam
 |Intel i7 13700K + 15 layers to NVIDIA RTX 4070 | Llama v2 13B |2.171s |
 
 ## Future Optimizations
-
-* We are looking to swap out the emotions AI to a dedicated text -> emotions AI. 
-This will bring significant performance in both the AI model and the hardware,
-as they are no longer wrapped to such a large model.
-
-* Personality baker is also something that we will need to implement, as personality comes from events.
-
-* Will probably need to finetune Llama V2 to perform better on backstory -> personality better. This will likely be implemented in August.
-
-* For the game [Light the World](https://ltw.starlightx.io), we'll need to bake the FastAPi
-into a C++ file and then deploy to Unreal Engine as a binary. 
+Will be replaced by a action/past event based model, one that I am currently working on.
