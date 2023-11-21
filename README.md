@@ -2,6 +2,8 @@
 Some bleeding edge Machine Learning technologies (Llama 2, GPT3.5/4)
 directly in gameplay.
 
+Is no longer the current neural engine due to a new engine, and is deprecated/archived.
+
 ## Introduction
 The backend process (What happens in the back):
 
